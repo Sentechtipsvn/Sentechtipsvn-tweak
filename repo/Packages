@@ -14,9 +14,9 @@ Tag: role::enduser
 Author: Sentechtipsvn
 Name: QuickControl
 Homepage: https://github.com/Sentechtipsvn/Sentechtipsvn-tweak
-Icon: https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/icons/quickcontrol.png
+Icon: https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/icons/quickcontrol.png
 Depiction: https://github.com/Sentechtipsvn/Sentechtipsvn-tweak/blob/master/projects/QuickControl/README.md
-SileoDepiction: https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/depictions/quickcontrol.json
+SileoDepiction: https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/depictions/quickcontrol.json
 
 Package: vn.sentechtips.senswipe
 Version: 0.1.0~beta1
@@ -34,9 +34,9 @@ Tag: role::enduser
 Author: Sentechtipsvn
 Name: SenSwipe
 Homepage: https://github.com/Sentechtipsvn/Sentechtipsvn-tweak
-Icon: https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/icons/senswipe.png
+Icon: https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/icons/senswipe.png
 Depiction: https://github.com/Sentechtipsvn/Sentechtipsvn-tweak/blob/master/projects/SenSwipe/README.md
-SileoDepiction: https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/depictions/senswipe.json
+SileoDepiction: https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/depictions/senswipe.json
 
 Package: vn.sentechtips.sharewifi
 Version: 0.2.0~beta1
@@ -54,7 +54,7 @@ Tag: role::enduser
 Author: Sentechtipsvn
 Name: ShareWifi
 Homepage: https://github.com/Sentechtipsvn/Sentechtipsvn-tweak
-Icon: https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/icons/sharewifi.png
+Icon: https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/icons/sharewifi.png
 Depiction: https://github.com/Sentechtipsvn/Sentechtipsvn-tweak/blob/master/projects/ShareWifi/README.md
-SileoDepiction: https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/depictions/sharewifi.json
+SileoDepiction: https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/depictions/sharewifi.json
 

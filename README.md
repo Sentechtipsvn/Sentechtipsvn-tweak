@@ -7,7 +7,7 @@ Kho APT cho Sileo và nơi lưu mã nguồn tweak do **© Sentechtipsvn** phát 
 Nguồn dùng trực tiếp từ GitHub:
 
 ```text
-https://raw.githubusercontent.com/Sentechtipsvn/Sentechtipsvn-tweak/master/repo/
+https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/
 ```
 
 Mở **Sileo → Nguồn → dấu + → dán địa chỉ → Thêm nguồn**, sau đó làm mới nguồn.
@@ -61,9 +61,13 @@ Công cụ tạo nguồn cần Python 3 và `dpkg-scanpackages` (gói `dpkg-dev`
 https://sentechtipsvn.github.io/Sentechtipsvn-tweak/
 ```
 
-Trong repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Sau đó vào **Actions → Publish Sileo repository → Run workflow**. Chờ workflow xuất bản thành công rồi dùng địa chỉ Pages trong Sileo hoặc mở trang để bấm **Thêm vào Sileo**.
+Trong repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Sau đó vào **Actions → Publish Sileo repository → Run workflow**. Chờ workflow xuất bản thành công rồi mở địa chỉ Pages bằng trình duyệt để bấm **Thêm vào Sileo** (nút tự dùng nguồn raw chữ thường).
 
-Nguồn raw vẫn dùng được độc lập. Chỉ cần thêm một trong hai địa chỉ trong Sileo, tránh hiện nguồn trùng. Pages chưa được xem là đã bật chỉ vì có workflow; phải kiểm tra lần triển khai thực tế. Workflow bỏ qua deploy nếu Pages chưa bật và vẫn kiểm tra APT bình thường. Không cần đưa PAT hoặc khóa riêng vào repo.
+Trang Pages dùng để xem danh sách và tải gói. **Nút Thêm vào Sileo và Sao chép nguồn luôn dùng địa chỉ raw GitHub chữ thường ở đầu README**, kể cả khi trang đang được xuất bản bằng Pages.
+
+Trong ảnh lỗi từ thiết bị thử, Sileo truy cập đường dẫn nguồn chữ thường. `/Sentechtipsvn-tweak/Release` trên Pages trả 200 nhưng `/sentechtipsvn-tweak/Release` trả 404. Địa chỉ raw chữ thường được kiểm tra trả 200. Không thêm địa chỉ Pages này trực tiếp vào Sileo; nếu đã thêm và gặp 404, xóa đúng nguồn Pages lỗi rồi thêm địa chỉ raw. Không cần gỡ tweak đã cài.
+
+Workflow bỏ qua deploy nếu Pages chưa bật và vẫn kiểm tra APT bình thường. Không cần đưa PAT hoặc khóa riêng vào repo.
 
 ## Kiểm chứng và giới hạn
 
