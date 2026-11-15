@@ -1,0 +1,58 @@
+name: Publish Sileo repository
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build and validate APT source
+        run: |
+          python3 scripts/build_repo.py
+          python3 scripts/verify_repo.py
+          bash scripts/verify_apt.sh
+      - name: Check Pages availability
+        id: availability
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' > /tmp/pages-type 2>/dev/null && grep -qx workflow /tmp/pages-type; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo '### APT source validated' >> "$GITHUB_STEP_SUMMARY"
+            echo 'The raw GitHub source is ready. To publish the shorter Pages URL, select Settings → Pages → Source: GitHub Actions, then run this workflow again.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Configure Pages
+        if: steps.availability.outputs.ready == 'true'
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Build site for Pages address
+        if: steps.availability.outputs.ready == 'true'
+        env:
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          python3 scripts/build_repo.py --base-url "$PAGES_BASE_URL"
+          python3 scripts/verify_repo.py
+      - name: Upload Pages artifact
+        if: steps.availability.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo
+      - name: Deploy Pages
+        if: steps.availability.outputs.ready == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
