@@ -1,6 +1,6 @@
 {
   "name": "Sentechtipsvn Tweak",
-  "source": "https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/",
+  "source": "https://sentechtipsvn.github.io/",
   "packages": [
     {
       "slug": "quickcontrol",
@@ -20,7 +20,7 @@
       ],
       "package": "vn.sentechtips.quickcontrol",
       "icon": "quickcontrol.png",
-      "url": "https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/debs/QuickControl-0.1.0-beta1-iphoneos-arm64.deb",
+      "url": "https://sentechtipsvn.github.io/debs/QuickControl-0.1.0-beta1-iphoneos-arm64.deb",
       "size": 59736,
       "sha256": "febd53aad16a4ef302d2248eb53e9046c882088c2d65cdff3c6b0a9ac45bfbec",
       "guide": "https://github.com/Sentechtipsvn/Sentechtipsvn-tweak/blob/master/projects/QuickControl/README.md"
@@ -43,7 +43,7 @@
       ],
       "package": "vn.sentechtips.senswipe",
       "icon": "senswipe.png",
-      "url": "https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/debs/SenSwipe-0.1.0-beta1-iphoneos-arm64.deb",
+      "url": "https://sentechtipsvn.github.io/debs/SenSwipe-0.1.0-beta1-iphoneos-arm64.deb",
       "size": 8012,
       "sha256": "f2c269d338c9b0314038d4ac84b4eef8fdd5d19a14d8465df10474b10f703d79",
       "guide": "https://github.com/Sentechtipsvn/Sentechtipsvn-tweak/blob/master/projects/SenSwipe/README.md"
@@ -67,7 +67,7 @@
       ],
       "package": "vn.sentechtips.sharewifi",
       "icon": "sharewifi.png",
-      "url": "https://raw.githubusercontent.com/sentechtipsvn/sentechtipsvn-tweak/master/repo/debs/ShareWifi-0.2.0-beta1-iphoneos-arm64.deb",
+      "url": "https://sentechtipsvn.github.io/debs/ShareWifi-0.2.0-beta1-iphoneos-arm64.deb",
       "size": 76552,
       "sha256": "e74c05163764d0ca657ea025a2e526a9fea3dfae94c61240cc1471e12bfaaf9d",
       "guide": "https://github.com/Sentechtipsvn/Sentechtipsvn-tweak/blob/master/projects/ShareWifi/README.md"

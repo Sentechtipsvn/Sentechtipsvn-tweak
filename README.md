@@ -1,3 +1,7 @@
+> **Nguồn chính thức mới: https://sentechtipsvn.github.io/**
+> Mã nguồn và cập nhật tiếp theo nằm tại [Sentechtipsvn.github.io](https://github.com/Sentechtipsvn/Sentechtipsvn.github.io).
+> Kho này giữ lại dữ liệu cũ để nguồn raw đang dùng tiếp tục hoạt động. Phần hướng dẫn bên dưới là lịch sử thiết lập nguồn cũ.
+
 # Sentechtipsvn Tweak
 
 Kho APT cho Sileo và nơi lưu mã nguồn tweak do **© Sentechtipsvn** phát triển.
