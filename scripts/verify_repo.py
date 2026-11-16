@@ -77,6 +77,8 @@ def main():
     check(len(seen) == len(public['packages']) == 3, 'Expected exactly three current tweaks')
     release = parse_control((SITE / 'Release').read_text())
     check(release['Architectures'] == 'iphoneos-arm64', 'Wrong Release architecture')
+    check('Components' in release and release['Components'].strip() == 'main', 'Sileo 2.5.1 requires Components in Release')
+    check(release.get('Origin') == 'Sentechtipsvn Tweak', 'Missing repository display name')
     for field, alg in [('MD5Sum', 'md5'), ('SHA256', 'sha256'), ('SHA512', 'sha512')]:
         for line in release[field].strip().splitlines():
             digest, size, name = line.split()

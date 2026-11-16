@@ -23,6 +23,7 @@ jobs:
         run: |
           python3 scripts/build_repo.py
           python3 scripts/verify_repo.py
+          python3 scripts/verify_sileo.py
           bash scripts/verify_apt.sh
       - name: Check Pages availability
         id: availability
@@ -47,6 +48,7 @@ jobs:
         run: |
           python3 scripts/build_repo.py --base-url "$PAGES_BASE_URL"
           python3 scripts/verify_repo.py
+          python3 scripts/verify_sileo.py
       - name: Upload Pages artifact
         if: steps.availability.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@v3

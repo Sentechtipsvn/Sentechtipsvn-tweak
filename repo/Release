@@ -3,9 +3,10 @@ Label: Sentechtipsvn Tweak
 Suite: stable
 Codename: sentechtipsvn
 Version: 1.0
+Components: main
 Architectures: iphoneos-arm64
 Description: Personal rootless tweaks by Sentechtipsvn
-Date: Sun, 15 Nov 2026 04:08:52 UTC
+Date: Mon, 16 Nov 2026 13:11:28 UTC
 MD5Sum:
  5e1054a152a1956ff749a3084de761d5 3209 Packages
  8f52ab6c683a1c1829f554af6d9f1d05 1038 Packages.gz

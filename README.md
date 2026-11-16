@@ -33,6 +33,7 @@ Các gói cài gốc được giữ nguyên byte, ID, version, phụ thuộc và
 - `archive/`: bản ShareWifi 0.1.0 và 0.1.1 cùng ZIP nguồn để lưu lịch sử; không đưa vào chỉ mục cài mặc định.
 - `scripts/build_repo.py`: tạo chỉ mục, checksum, native depictions và giao diện web từ metadata thực của .deb.
 - `scripts/verify_repo.py`: kiểm tra ID/version/architecture/dependency, từng byte .deb theo hash, icon/depiction, các bản nén và checksum Release.
+- `scripts/verify_sileo.py`: chạy parser C của Sileo 2.5.1 trên host, đối chiếu điều kiện chấp nhận Release và hash; có kiểm tra hồi quy trường Components. Cần clang.
 - `scripts/verify_apt.sh`: dùng APT đọc chỉ mục local trong thư mục tạm, không cài gói hoặc sửa cấu hình APT của máy.
 - `.github/workflows/publish.yml`: tự kiểm tra sau mỗi lần push lên master; xuất bản Pages nếu Pages đã bật ở chế độ GitHub Actions.
 
@@ -46,12 +47,13 @@ Các gói cài gốc được giữ nguyên byte, ID, version, phụ thuộc và
 ```sh
 python3 scripts/build_repo.py
 python3 scripts/verify_repo.py
+python3 scripts/verify_sileo.py
 bash scripts/verify_apt.sh
 ```
 
 5. Commit cả .deb mới lẫn các file chỉ mục sinh ra, rồi push. **Nguồn raw phục vụ trực tiếp các file đã commit**, vì vậy phải cập nhật Packages/Release cùng .deb. Quy trình CI sẽ báo nếu chỉ mục sai; không tự commit ngược vào nhánh.
 
-Công cụ tạo nguồn cần Python 3 và `dpkg-scanpackages` (gói `dpkg-dev` trên Debian/Ubuntu). Thử đọc APT cần `apt-get`/`apt-cache`. Các tweak có môi trường build riêng ghi trong README của từng dự án.
+Công cụ tạo nguồn cần Python 3 và `dpkg-scanpackages` (gói `dpkg-dev` trên Debian/Ubuntu). Thử đọc APT cần `apt-get`/`apt-cache`; chạy parser C cần clang hỗ trợ Blocks. Các tweak có môi trường build riêng ghi trong README của từng dự án.
 
 ## Bật địa chỉ GitHub Pages ngắn hơn (một lần)
 
@@ -68,6 +70,16 @@ Trang Pages dùng để xem danh sách và tải gói. **Nút Thêm vào Sileo v
 Trong ảnh lỗi từ thiết bị thử, Sileo truy cập đường dẫn nguồn chữ thường. `/Sentechtipsvn-tweak/Release` trên Pages trả 200 nhưng `/sentechtipsvn-tweak/Release` trả 404. Địa chỉ raw chữ thường được kiểm tra trả 200. Không thêm địa chỉ Pages này trực tiếp vào Sileo; nếu đã thêm và gặp 404, xóa đúng nguồn Pages lỗi rồi thêm địa chỉ raw. Không cần gỡ tweak đã cài.
 
 Workflow bỏ qua deploy nếu Pages chưa bật và vẫn kiểm tra APT bình thường. Không cần đưa PAT hoặc khóa riêng vào repo.
+
+## Sửa lỗi Sileo không đọc được Release
+
+Sileo 2.5.1 yêu cầu Release có `Architectures` phù hợp và trường `Components`, kể cả nguồn flat. Bản tạo kho trước đây thiếu `Components`, nên APT vẫn đọc được nhưng Sileo báo `Could not parse release file.` và nguồn có 0 gói. Bộ tạo hiện thêm `Components: main` và CI chạy parser C thật từ tag Sileo 2.5.1 cùng các điều kiện kiểm tra trong RepoManager.
+
+Nếu đã thêm nguồn raw, chỉ cần làm mới nguồn sau cập nhật. Nguồn Pages chữ thường cũ vẫn là địa chỉ khác bị 404; xóa riêng nguồn Pages lỗi để nó không báo đỏ trong mỗi lần làm mới. Không cần gỡ tweak hoặc respring chỉ để cập nhật metadata nguồn.
+
+### Mã kiểm thử bên thứ ba
+
+`tests/vendor/sileo-2.5.1/` giữ parser C và giấy phép gốc. Driver và header tương thích Linux chỉ dùng cho kiểm thử, không đưa vào các tweak. This product includes software developed by the Sileo Team. Xem `tests/vendor/sileo-2.5.1/LICENSE` và [mã nguồn tag 2.5.1](https://github.com/Sileo/Sileo/tree/2.5.1). Đây không phải chứng nhận của Sileo; kiểm thử host không chạy app iOS, cache hay giao diện trên thiết bị.
 
 ## Kiểm chứng và giới hạn
 

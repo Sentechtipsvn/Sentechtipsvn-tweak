@@ -105,7 +105,7 @@ def main():
     (SITE / 'Packages.xz').write_bytes(lzma.compress(packages))
     date = datetime.datetime.now(datetime.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S UTC')
     release = ['Origin: Sentechtipsvn Tweak', 'Label: Sentechtipsvn Tweak',
-               'Suite: stable', 'Codename: sentechtipsvn', 'Version: 1.0',
+               'Suite: stable', 'Codename: sentechtipsvn', 'Version: 1.0', 'Components: main',
                'Architectures: iphoneos-arm64', 'Description: Personal rootless tweaks by Sentechtipsvn', 'Date: ' + date]
     index_names = ['Packages', 'Packages.gz', 'Packages.bz2', 'Packages.xz']
     for label, algorithm in [('MD5Sum', 'md5'), ('SHA256', 'sha256'), ('SHA512', 'sha512')]:
