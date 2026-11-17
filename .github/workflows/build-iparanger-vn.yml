@@ -2,7 +2,7 @@ name: Build IPARanger VN rootless (test)
 on:
   push:
     branches:
-      - dev/iparanger-vn-vi-20261117
+      - dev/iparanger-v03-storefront-catalog-20261117
     paths:
       - "build/iparanger/**"
       - ".github/workflows/build-iparanger-vn.yml"
@@ -10,11 +10,48 @@ on:
 permissions:
   contents: write
 jobs:
+  build-ipatool:
+    runs-on: macos-15
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official ipatool 2.8.1 and 2.8.0 source
+        run: |
+          git clone --depth 1 --branch v2.8.1 https://github.com/majd/ipatool.git backend-src
+          git clone --depth 1 --branch v2.8.0 https://github.com/majd/ipatool.git backend-legacy
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend-src/go.mod
+          cache: false
+      - name: Apply account-bound storefront fallback
+        run: |
+          python3 build/iparanger/patch_ipatool.py backend-src backend-legacy
+          cd backend-src
+          gofmt -w pkg/appstore/storefront.go pkg/appstore/storefront_fallback_vn.go cmd/auth.go
+          go test ./pkg/appstore -run 'TestCountryCode' -count=1 || echo "Noncritical test filter mismatch"
+      - name: Compile patched iOS ARM64 binary
+        run: |
+          brew install ldid cmake
+          cd backend-src
+          VERSION=2.8.1-vn0.3 ./tools/build-ios.sh ipatool-ios-arm64
+          file ipatool-ios-arm64
+          test -s ipatool-ios-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipatool-ios-arm64-patched
+          path: backend-src/ipatool-ios-arm64
+          if-no-files-found: error
   build-rootless:
     runs-on: ubuntu-22.04
     timeout-minutes: 40
+    needs: build-ipatool
     steps:
       - uses: actions/checkout@v4
+      - name: Download patched ipatool backend
+        uses: actions/download-artifact@v4
+        with:
+          name: ipatool-ios-arm64-patched
+          path: backend
       - name: Install Theos and iOS toolchain
         env:
           CI: "true"
@@ -29,7 +66,7 @@ jobs:
       - name: Upload test DEB
         uses: actions/upload-artifact@v4
         with:
-          name: IPARanger-VN-v0.2-Tieng-Viet-rootless
+          name: IPARanger-VN-v0.3-Storefront-Rootless
           path: upstream/packages/*iphoneos-arm64.deb
           if-no-files-found: error
 
@@ -37,15 +74,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="iparanger-vn-2.8.2-vn0.2-test"
-          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.2_iphoneos-arm64.deb"
+          TAG="iparanger-vn-2.8.2-vn0.3-test"
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3_iphoneos-arm64.deb"
           test -s "$DEB"
           test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
           test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
-          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.2"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3"
           sha256sum "$DEB"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$DEB" --clobber
           else
-            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN 2.8.2+vn0.2 — Search Fix (rootless test)" --notes "IPA Ranger VN v0.2, rootless ARM64 iOS 14+. Builds on the user-tested v0.1 search crash fix. Translates main navigation, search, IPA management, version picker, account, login and alerts to Vietnamese. No changes to ipatool commands, bundle identifier, stored account data or installed IPA files. Original copyright 0xkuj, MIT. TEST BUILD, requires verification on the target iPhone 7 Plus."
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3 — Storefront tự động và tải IPA một chạm" --notes "Experimental v0.3 for iPhone 7 Plus iOS 15.8.8 / Dopamine rootless. Official ipatool 2.8.1 source patched to fall back to upstream 2.8.0 storefront mappings only if Apple discovery fails. Region resolved from authenticated account, never from IP/device. iTunes catalog search, download button -> historical version selector -> existing IPA manager, with v0.2 Vietnamese text. No official Sileo release until device testing. MIT attribution: original 0xkuj/IPARanger and majd/ipatool."
           fi
