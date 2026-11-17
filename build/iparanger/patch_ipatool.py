@@ -74,15 +74,15 @@ p.write_text(c,encoding="utf-8")
 auth=root/"cmd/auth.go"
 c=auth.read_text(encoding="utf-8")
 anchor='''Str("email", output.Account.Email).
-                Bool("success", true).'''
+\t\t\t\tBool("success", true).'''
 # Two occurrences (login, info); replace only occurrence after 'func infoCmd'.
 start=c.index('func infoCmd()')
 s=c[start:]
 assert s.count(anchor)==1, "auth info logging shape changed"
 s=s.replace(anchor,'''Str("email", output.Account.Email).
                 Str("storeFront", output.Account.StoreFront).
-                Str("country", appstore.LegacyCountryForStoreFront(output.Account.StoreFront)).
-                Bool("success", true).''')
+\t\t\t\tStr("country", appstore.LegacyCountryForStoreFront(output.Account.StoreFront)).
+\t\t\t\tBool("success", true).''')
 c=c[:start]+s
 auth.write_text(c,encoding="utf-8")
 print("ipatool 2.8.1 patched: dynamic storefront fallback + country-only auth info")
