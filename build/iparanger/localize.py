@@ -11,6 +11,7 @@ replacements={
 "Controllers/IPARSearchViewController.m": {
     "Search in Appstore: %@": "Tìm trong App Store: %@",
     "App Name cannot be empty": "Vui lòng nhập tên ứng dụng",
+    "OK": "Đồng ý",
     "e.g - Netflix": "Ví dụ: Zalo",
     "Enter App Name": "Nhập tên ứng dụng",
     "Sign in required": "Cần đăng nhập",
@@ -22,7 +23,6 @@ replacements={
     "App Selected %@": "Ứng dụng: %@",
     "Bundle ID: %@": "Mã gói (Bundle ID): %@",
     "Copy Bundle": "Sao chép Bundle ID",
-    "Fetch more results for %@...": "Đang tải thêm kết quả cho %@...",
     "Fetching more results for %@...": "Đang tải thêm kết quả cho %@...",
     "Searching the App Store for %@...": "Đang tìm %@ trên App Store...",
     "Search failed. Try again.": "Tìm kiếm thất bại. Vui lòng thử lại.",
@@ -33,6 +33,8 @@ replacements={
 "Controllers/IPARDownloadViewController.m": {
     "Download Appstore: %@": "Tải từ App Store: %@",
     "Loading downloaded apps…": "Đang tải danh sách IPA…",
+    "OK": "Đồng ý",
+    "YES": "Có",
     "Delete All": "Xóa tất cả",
     "Open Download Folder in Filza": "Mở thư mục tải trong Filza",
     "Delete Cache Folder": "Xóa bộ nhớ đệm",
@@ -101,6 +103,7 @@ replacements={
 },
 "Controllers/IPARLoginScreenViewController.m": {
     "Apple ID email": "Email Apple ID",
+    "OK": "Đồng ý",
     "Password": "Mật khẩu",
     "Browse downloaded apps": "Xem IPA đã tải (không đăng nhập)",
     "Need help?": "Trợ giúp",
@@ -187,6 +190,17 @@ for old,new in [
     assert old in code,old
     code=code.replace(old,new)
 login.write_text(code,"utf-8")
+# Display-only version and SpringBoard label; keep internal identifiers unchanged.
+constants_file=root/"Extensions/IPARConstants.h"
+text_v=constants_file.read_text("utf-8")
+old='@"IPA Ranger version: 2.8.2 (rootless)"'
+assert text_v.count(old)==1
+constants_file.write_text(text_v.replace(old,'@"IPA Ranger VN: 2.8.2+vn0.2 (rootless)"'),"utf-8")
+info=root/"Resources/Info.plist"
+text_info=info.read_text("utf-8")
+key='<key>CFBundleIdentifier</key>\n\t<string>com.0xkuj.iparanger</string>'
+assert text_info.count(key)==1
+info.write_text(text_info.replace(key,key+'\n\t<key>CFBundleDisplayName</key>\n\t<string>IPA Ranger VN</string>'),"utf-8")
 # Avoid translating back-end error sentinels, preference flags, 'search'/'download' commands.
 constants=(root/"Extensions/IPARConstants.h").read_text("utf-8")
 assert 'kSearchTitle = @"Search"' in constants
