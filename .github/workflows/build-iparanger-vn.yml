@@ -8,7 +8,7 @@ on:
       - ".github/workflows/build-iparanger-vn.yml"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build-rootless:
     runs-on: ubuntu-22.04
@@ -32,3 +32,20 @@ jobs:
           name: IPARanger-VN-iOS15-rootless-test
           path: upstream/packages/*iphoneos-arm64.deb
           if-no-files-found: error
+
+      - name: Publish prerelease DEB for direct download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="iparanger-vn-2.8.2-vn0.1-test"
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.1_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.1"
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN 2.8.2+vn0.1 — Search Fix (rootless test)" --notes "Experimental rootless arm64 package for iOS 15.8.8 Dopamine. Fixes UIKit calls on background search callback, validates search JSON, prevents overlapping searches. Based on original MIT-licensed 0xkuj/IPARanger. This is a TEST BUILD; not yet verified on the target device. Not a fully localized edition."
+          fi
