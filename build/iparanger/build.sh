@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 git clone --depth 1 --branch main https://github.com/0xkuj/IPARanger.git upstream
+git -C upstream fetch --depth 1 origin ea3b0f721481dc9b192b213f16169afdb7615fc2
+git -C upstream checkout --detach ea3b0f721481dc9b192b213f16169afdb7615fc2
 python3 - <<'PY'
 from pathlib import Path
 p=Path("upstream/Controllers/IPARSearchViewController.m")
@@ -118,9 +120,10 @@ p.write_text(src,encoding="utf-8")
 ctrl=Path("upstream/layout/DEBIAN/control")
 control=ctrl.read_text(encoding="utf-8")
 assert "Version: 2.8.2" in control
-ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.1").replace("Name: IPA Ranger", "Name: IPA Ranger VN (Search Fix)"), encoding="utf-8")
+ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.2").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
 print("PATCH OK: UI thread, JSON validation, search concurrency, safe shell term")
 PY
+python3 build/iparanger/localize.py upstream
 cd upstream
 # Use an installed SDK; preserve min deployment target iOS 14.
 sed -i 's/iphone:clang:14.5:14.0/iphone:clang:latest:14.0/' Makefile
@@ -134,4 +137,5 @@ test -n "$(find packages -type f -name '*iphoneos-arm64.deb' -print -quit)"
 for deb in packages/*iphoneos-arm64.deb; do
   dpkg-deb --info "$deb" | head -30
   test "$(stat -c %s "$deb")" -gt 100000
+  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.2"
 done
