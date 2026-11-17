@@ -122,6 +122,10 @@ ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.1").replac
 print("PATCH OK: UI thread, JSON validation, search concurrency, safe shell term")
 PY
 cd upstream
+# Use an installed SDK; preserve min deployment target iOS 14.
+sed -i 's/iphone:clang:14.5:14.0/iphone:clang:latest:14.0/' Makefile
+# iPhone 7 Plus is arm64; no arm64e slice is required in this test build.
+sed -i 's/ARCHS = arm64 arm64e/ARCHS = arm64/' Makefile
 THEOS_PACKAGE_SCHEME=rootless make clean package FINALPACKAGE=1
 find packages -type f -name '*iphoneos-arm64.deb' -print
 test -n "$(find packages -type f -name '*iphoneos-arm64.deb' -print -quit)"
