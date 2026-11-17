@@ -16,6 +16,7 @@ search.write_text(r'''#import "IPARSearchViewController.h"
 @property (nonatomic, strong) UISearchController *searchController;
 @property (nonatomic, strong) NSMutableArray<NSMutableDictionary *> *searchResults;
 @property (nonatomic, strong) NSCache *iconCache;
+@property (nonatomic, strong) NSMutableSet<NSString *> *pendingIcons;
 @property (nonatomic, strong) UILabel *noDataLabel;
 @property (nonatomic, strong) NSTimer *debounceTimer;
 @property (nonatomic, copy) NSString *activeCountry;
@@ -40,6 +41,7 @@ search.write_text(r'''#import "IPARSearchViewController.h"
     [super viewDidLoad];
     self.searchResults = [NSMutableArray array];
     self.iconCache = [[NSCache alloc] init];
+    self.pendingIcons = [NSMutableSet set];
     self.tableView.rowHeight = 86.0;
     self.tableView.backgroundColor = UIColor.systemBackgroundColor;
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
@@ -70,7 +72,10 @@ search.write_text(r'''#import "IPARSearchViewController.h"
 
 - (void)refreshStorefront:(id)sender {
     self.activeCountry = nil;
+    self.requestGeneration++;
+    [self.searchResults removeAllObjects];
     [self.iconCache removeAllObjects];
+    [self.tableView reloadData];
     [self resolveStorefront];
 }
 
@@ -240,16 +245,18 @@ search.write_text(r'''#import "IPARSearchViewController.h"
 }
 
 - (void)loadArtwork:(NSDictionary *)item bundleID:(NSString *)bundleID generation:(NSInteger)generation {
+    if ([self.pendingIcons containsObject:bundleID]) return;
     NSString *urlText = item[@"artworkURL"];
     NSURL *url = [urlText isKindOfClass:[NSString class]] ? [NSURL URLWithString:urlText] : nil;
     if (!url || ![url.scheme isEqualToString:@"https"]) return;
+    [self.pendingIcons addObject:bundleID];
     NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url
         completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         UIImage *image = (!error && data.length) ? [UIImage imageWithData:data] : nil;
-        if (!image) return;
-        [self.iconCache setObject:image forKey:bundleID];
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (generation != self.requestGeneration) return;
+            [self.pendingIcons removeObject:bundleID];
+            if (!image || generation != self.requestGeneration) return;
+            [self.iconCache setObject:image forKey:bundleID];
             for (NSMutableDictionary *record in self.searchResults) {
                 if ([record[kAppBundleIndex] isEqualToString:bundleID]) {
                     record[kAppimageIndex] = image;
@@ -307,7 +314,7 @@ search.write_text(r'''#import "IPARSearchViewController.h"
     [alert addAction:[UIAlertAction actionWithTitle:@"Sao chép Bundle ID" style:UIAlertActionStyleDefault
         handler:^(UIAlertAction *action) { [UIPasteboard generalPasteboard].string = bundleID; }]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         alert.popoverPresentationController.sourceView = self.view;
         alert.popoverPresentationController.sourceRect = [tableView rectForRowAtIndexPath:indexPath];
     }
