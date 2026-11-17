@@ -1,0 +1,62 @@
+name: Package IPARanger VN v0.3 (verified backend reuse)
+on:
+  push:
+    branches:
+      - dev/iparanger-v03-storefront-catalog-20261117
+    paths:
+      - ".github/workflows/build-iparanger-v03-fast.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse already-compiled verified ipatool ARM64 backend
+        uses: actions/download-artifact@v4
+        with:
+          name: ipatool-ios-arm64-patched
+          path: backend
+          run-id: 44123289155
+          repository: Sentechtipsvn/Sentechtipsvn-tweak
+          github-token: ${{ github.token }}
+      - name: Verify backend binary
+        run: |
+          test -s backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Compile and package v0.3
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.3-rootless-deb
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.3-test
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3 — Storefront theo Apple ID" --notes "Bản thử nghiệm rootless ARM64. Dùng ipatool ARM64 vá storefront tự động (gh run 44123289155), iTunes Search API, nút tải một chạm và lịch sử phiên bản. Giữ Package ID và IPA đã tải. Chưa kiểm thử thực tế trên iPhone 7 Plus. Nguồn gốc 0xkuj/IPARanger, majd/ipatool — MIT."
+          fi
