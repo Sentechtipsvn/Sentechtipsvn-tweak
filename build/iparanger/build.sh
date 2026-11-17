@@ -126,6 +126,8 @@ cd upstream
 sed -i 's/iphone:clang:14.5:14.0/iphone:clang:latest:14.0/' Makefile
 # iPhone 7 Plus is arm64; no arm64e slice is required in this test build.
 sed -i 's/ARCHS = arm64 arm64e/ARCHS = arm64/' Makefile
+# Remove upstream prebuilt packages so only OUR rebuilt package can be uploaded.
+find packages -maxdepth 1 -type f -name '*.deb' -delete
 THEOS_PACKAGE_SCHEME=rootless make clean package FINALPACKAGE=1
 find packages -type f -name '*iphoneos-arm64.deb' -print
 test -n "$(find packages -type f -name '*iphoneos-arm64.deb' -print -quit)"
