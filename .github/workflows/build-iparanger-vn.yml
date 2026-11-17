@@ -1,0 +1,34 @@
+name: Build IPARanger VN rootless (test)
+on:
+  push:
+    branches:
+      - dev/iparanger-vn-searchfix-20261117
+    paths:
+      - "build/iparanger/**"
+      - ".github/workflows/build-iparanger-vn.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-rootless:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Theos and iOS toolchain
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Compile patched rootless application package
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - name: Upload test DEB
+        uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-iOS15-rootless-test
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
