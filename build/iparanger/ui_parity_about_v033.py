@@ -119,7 +119,7 @@ s=once(s,'- (void)showDeveloperX {',
     [self.navigationController pushViewController:[[IPARAboutViewController alloc] init] animated:YES];
 }
 - (void)showDeveloperX {''',"About navigation")
-s=once(s,'IPARL(@"Vietnamese fork by Sentechtipsvn")','@"Sentechtipsvn"',"compact footer name")
+s=once(s,'[stack addArrangedSubview:[self makeCreditsFooter]];','// Credits and original MIT license are now in About.',"Move detailed footer to About")
 p.write_text(s,"utf-8")
 
 (root/"Controllers/IPARAboutViewController.h").write_text(r'''#import <UIKit/UIKit.h>
