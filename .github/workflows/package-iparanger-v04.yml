@@ -1,0 +1,63 @@
+name: Build IPARanger VN v0.4.0 from proven release
+on:
+  push:
+    branches:
+      - dev/iparanger-v04-ipa-manager-20261119
+    paths:
+      - ".github/workflows/package-iparanger-v04.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse exact ipatool backend from prior verified v0.3.2 DEB
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p backend previous
+          gh release download iparanger-vn-2.8.2-vn0.3.3-test -R Sentechtipsvn/Sentechtipsvn-tweak -p '*.deb' -D previous
+          PACKAGE=$(find previous -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -s "$PACKAGE"
+          dpkg-deb -x "$PACKAGE" previous/extracted
+          BINARY=$(find previous/extracted -type f -name ipatool -print -quit)
+          test -s "$BINARY"
+          cp "$BINARY" backend/ipatool-ios-arm64
+          chmod +x backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Build and verify IPA Manager Pro v0.4
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - name: Verify DEB and upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.4.0-test
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.4.0_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.4.0"
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.4.0 — IPA Manager Pro Alpha" --notes "IPARanger VN v0.4.0 ALPHA on user-tested v0.3.3 backend. Adds IPA details copy Bundle ID, ordered About footer, ZIP CRC verification, SHA256, embedded minimum iOS and Mach-O encryption detection for TrollStore preflight (no DRM removal), multi-version IPA library filtering/sorting, Files/iCloud export and privacy-minimal diagnostics. Experimental rootless iPhone 7 Plus build: verify on device before Sileo stable. Original authors and MIT license retained."
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.4.0-test-deb
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
