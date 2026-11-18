@@ -54,7 +54,7 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$DEB" --clobber
           else
-            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.3 — UI & Giới thiệu" --notes "Test: Apple ID Store badge within search field, native IPA details (install, Filza, share, rename, delete), compact account credits, About, terms, MIT copyright. Builds on tested v0.3.2 download engine; account storefront and downloaded IPA storage unchanged. Needs iOS 15 Dopamine real-device validation before public Sileo."
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.3 — UI & Giới thiệu" --notes "Test: Apple ID Store badge within search field, IPA details with 2x2 action grid (install, Filza, share, rename) and red Delete row, compact account credits, About, terms, MIT copyright. Builds on tested v0.3.2 download engine; account storefront and downloaded IPA storage unchanged. Needs iOS 15 Dopamine real-device validation before public Sileo."
           fi
       - uses: actions/upload-artifact@v4
         with:
