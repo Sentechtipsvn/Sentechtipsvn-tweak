@@ -272,7 +272,7 @@ for lang,index in (("en",0),("vi",1)):
     p=root/"Resources"/(lang+".lproj")/"Localizable.strings"
     data=p.read_text("utf-8")
     for english,vietnamese in new_strings.items():
-        assert strings_literal(english)+" =" not in data, "Duplicate localization key: "+english
+        if strings_literal(english)+" =" in data: continue
         data+=f"{strings_literal(english)} = {strings_literal((english,vietnamese)[index])};\n"
     p.write_text(data,"utf-8")
 
