@@ -1,4 +1,4 @@
-name: Build IPARanger VN v0.4.0 from proven release
+name: Build IPARanger VN v0.4.0 Alpha (retry source patch)
 on:
   push:
     branches:
