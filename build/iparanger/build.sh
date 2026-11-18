@@ -120,7 +120,7 @@ p.write_text(src,encoding="utf-8")
 ctrl=Path("upstream/layout/DEBIAN/control")
 control=ctrl.read_text(encoding="utf-8")
 assert "Version: 2.8.2" in control
-ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.3.3").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
+ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.4.0").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
 print("PATCH OK: UI thread, JSON validation, search concurrency, safe shell term")
 PY
 python3 build/iparanger/localize.py upstream
@@ -130,13 +130,22 @@ python3 build/iparanger/polish_v031.py upstream
 python3 build/iparanger/polish_v032.py upstream
 python3 build/iparanger/ui_parity_about_v033.py upstream
 python3 build/iparanger/ipa_details_v033.py upstream
+python3 build/iparanger/v04_ui.py upstream
+python3 build/iparanger/v04_audit.py upstream
+python3 build/iparanger/v04_library.py upstream
+
 # Enforce all approved UI views before building, not only successful compilation.
 grep -q 'countryOverlay' upstream/Controllers/IPARSearchViewController.m
 grep -q 'gridActionButton' upstream/Controllers/IPARIPADetailViewController.m
 grep -q 'IPARAboutViewController' upstream/Controllers/IPARAccountAndCreditsController.m
 grep -q 'MIT License' upstream/Controllers/IPARAboutViewController.m
 grep -q 'Sentechtipsvn' upstream/Controllers/IPARDeveloperLinksViewController.m
-sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.3.3/' upstream/Extensions/IPARConstants.h
+grep -q 'IPARIPAAudit' upstream/Controllers/IPARIPADetailViewController.m
+grep -q 'copyBundleIdentifier' upstream/Controllers/IPARIPADetailViewController.m
+grep -q 'displayedIPAItems' upstream/Controllers/IPARDownloadViewController.m
+grep -q 'initForExportingURLs' upstream/Controllers/IPARIPADetailViewController.m
+grep -q 'IPARDiagnostics' upstream/Controllers/IPARDownloadViewController.m
+sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.4.0/' upstream/Extensions/IPARConstants.h
 # Build pipeline supplies patched ipatool from macOS native iOS build.
 test -s backend/ipatool-ios-arm64
 cp backend/ipatool-ios-arm64 upstream/Resources/ipatool/ipatool
@@ -154,5 +163,5 @@ test -n "$(find packages -type f -name '*iphoneos-arm64.deb' -print -quit)"
 for deb in packages/*iphoneos-arm64.deb; do
   dpkg-deb --info "$deb" | head -30
   test "$(stat -c %s "$deb")" -gt 100000
-  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.3.3"
+  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.4.0"
 done
