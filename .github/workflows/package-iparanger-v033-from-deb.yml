@@ -1,4 +1,4 @@
-name: Build IPARanger VN v0.3.3 from stable release backend
+name: Build IPARanger VN v0.3.3 from proven release
 on:
   push:
     branches:
