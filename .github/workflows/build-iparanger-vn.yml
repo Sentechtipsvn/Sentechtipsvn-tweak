@@ -2,7 +2,7 @@ name: Build IPARanger VN rootless (test)
 on:
   push:
     branches:
-      - dev/iparanger-v031-language-unicorn-20261118
+      - dev/iparanger-v032-ui-install-20261118
     paths:
       - "build/iparanger/**"
       - ".github/workflows/build-iparanger-vn.yml"
@@ -78,7 +78,7 @@ jobs:
       - name: Upload test DEB
         uses: actions/upload-artifact@v4
         with:
-          name: IPARanger-VN-v0.3.1-Language-Unicorn-Rootless
+          name: IPARanger-VN-v0.3.2-UI-Install-Rootless
           path: upstream/packages/*iphoneos-arm64.deb
           if-no-files-found: error
 
@@ -86,15 +86,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="iparanger-vn-2.8.2-vn0.3.1-test"
-          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3.1_iphoneos-arm64.deb"
+          TAG="iparanger-vn-2.8.2-vn0.3.2-test"
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3.2_iphoneos-arm64.deb"
           test -s "$DEB"
           test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
           test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
-          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3.1"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3.2"
           sha256sum "$DEB"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$DEB" --clobber
           else
-            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.1 — Unicorn ARM64 + Language" --notes "Experimental v0.3.1 for iPhone 7 Plus iOS 15.8.8 / Dopamine rootless. Fixes prior ipatool Unicorn UC_ERR_ARCH by enabling aarch64 emulator backend. Adds Account > Language (Tiếng Việt / English), persistent language preference and extensible .lproj translation files. Adjusts download icon padding, shows per-version minimum iOS when supplied. Preserves Apple ID storefront behavior, search and existing IPA storage. Still requires real device testing before stable Sileo release. MIT attribution: 0xkuj/IPARanger and majd/ipatool."
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.2 — UI/UX + Icon Refresh" --notes "v0.3.2 test build based on user-verified v0.3.1: puts Apple ID App Store region inside search box, moves Language below Logout, adds X and support links for original 0xkuj and Vietnamese fork Sentechtipsvn, fixes localized login date formatting, and attempts uicache icon refresh after appinst success without forcing respring. Preserves original downloads and IPAs. Needs physical iPhone 7 Plus testing. MIT original credits: 0xkuj/IPARanger and majd/ipatool."
           fi
