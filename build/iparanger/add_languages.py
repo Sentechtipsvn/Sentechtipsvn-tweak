@@ -76,6 +76,7 @@ translations.update({
   "Rename File":"Đổi tên tệp",
   "Account Storefront":"Vùng App Store của tài khoản",
   "iOS %@+":"iOS %@+",
+  "%lu versions available":"Có %lu phiên bản",
 })
 # Existing v0.2 title / label direct replacements that aren't part of the mapping literal dictionary.
 translations.update({
@@ -295,7 +296,6 @@ if "IPARLanguageManager.h" not in s:
     s='#import "../Utils/IPARLanguageManager.h"\n'+s
 # Explicit localized formatted count.
 s=s.replace('@"Có %lu phiên bản"', 'IPARL(@"%lu versions available")')
-translations["%lu versions available"]="Có %lu phiên bản"
 picker.write_text(s,encoding="utf-8")
 
 # Runtime dialog layer catches strings from constants as well as English alert buttons.
