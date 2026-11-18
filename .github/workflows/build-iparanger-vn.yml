@@ -2,7 +2,7 @@ name: Build IPARanger VN rootless (test)
 on:
   push:
     branches:
-      - dev/iparanger-v03-storefront-catalog-20261117
+      - dev/iparanger-v031-language-unicorn-20261118
     paths:
       - "build/iparanger/**"
       - ".github/workflows/build-iparanger-vn.yml"
@@ -29,6 +29,18 @@ jobs:
           cd backend-src
           gofmt -w pkg/appstore/storefront.go pkg/appstore/storefront_fallback_vn.go cmd/auth.go
           go test ./pkg/appstore -run 'TestCountryCode' -count=1 || echo "Noncritical test filter mismatch"
+      - name: Fix Unicorn ARM64 emulator support in official iOS build script
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          file=Path("backend-src/tools/build-ios.sh")
+          data=file.read_text()
+          old="-DUNICORN_ARCH=x86 "
+          assert data.count(old)==1, "Unicorn build configuration changed upstream"
+          data=data.replace(old, "-DUNICORN_ARCH='x86;aarch64' ")
+          file.write_text(data)
+          print("Enabled x86 and aarch64 emulators, regardless of host CPU architecture")
+          PY
       - name: Compile patched iOS ARM64 binary
         run: |
           brew install ldid cmake
@@ -66,7 +78,7 @@ jobs:
       - name: Upload test DEB
         uses: actions/upload-artifact@v4
         with:
-          name: IPARanger-VN-v0.3-Storefront-Rootless
+          name: IPARanger-VN-v0.3.1-Language-Unicorn-Rootless
           path: upstream/packages/*iphoneos-arm64.deb
           if-no-files-found: error
 
@@ -74,15 +86,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="iparanger-vn-2.8.2-vn0.3-test"
-          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3_iphoneos-arm64.deb"
+          TAG="iparanger-vn-2.8.2-vn0.3.1-test"
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3.1_iphoneos-arm64.deb"
           test -s "$DEB"
           test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
           test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
-          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3.1"
           sha256sum "$DEB"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$DEB" --clobber
           else
-            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3 — Storefront tự động và tải IPA một chạm" --notes "Experimental v0.3 for iPhone 7 Plus iOS 15.8.8 / Dopamine rootless. Official ipatool 2.8.1 source patched to fall back to upstream 2.8.0 storefront mappings only if Apple discovery fails. Region resolved from authenticated account, never from IP/device. iTunes catalog search, download button -> historical version selector -> existing IPA manager, with v0.2 Vietnamese text. No official Sileo release until device testing. MIT attribution: original 0xkuj/IPARanger and majd/ipatool."
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.1 — Unicorn ARM64 + Language" --notes "Experimental v0.3.1 for iPhone 7 Plus iOS 15.8.8 / Dopamine rootless. Fixes prior ipatool Unicorn UC_ERR_ARCH by enabling aarch64 emulator backend. Adds Account > Language (Tiếng Việt / English), persistent language preference and extensible .lproj translation files. Adjusts download icon padding, shows per-version minimum iOS when supplied. Preserves Apple ID storefront behavior, search and existing IPA storage. Still requires real device testing before stable Sileo release. MIT attribution: 0xkuj/IPARanger and majd/ipatool."
           fi
