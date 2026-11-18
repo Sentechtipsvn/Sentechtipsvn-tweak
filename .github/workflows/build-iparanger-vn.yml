@@ -37,9 +37,9 @@ jobs:
           data=file.read_text()
           old="-DUNICORN_ARCH=x86 "
           assert data.count(old)==1, "Unicorn build configuration changed upstream"
-          data=data.replace(old, "-DUNICORN_ARCH='x86;aarch64' ")
+          data=data.replace(old, "-DUNICORN_ARCH=aarch64 ")
           file.write_text(data)
-          print("Enabled x86 and aarch64 emulators, regardless of host CPU architecture")
+          print("Enabled aarch64 emulator; avoids duplicate C symbols from linking both emulators")
           PY
       - name: Compile patched iOS ARM64 binary
         run: |
