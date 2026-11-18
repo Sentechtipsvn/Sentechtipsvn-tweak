@@ -1,0 +1,62 @@
+name: Package IPARanger VN v0.3.2 (verified backend)
+on:
+  push:
+    branches:
+      - dev/iparanger-v032-ui-install-20261118
+    paths:
+      - ".github/workflows/package-iparanger-v032.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse previously verified ipatool iOS ARM64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ipatool-ios-arm64-patched
+          path: backend
+          run-id: 44204924068
+          repository: Sentechtipsvn/Sentechtipsvn-tweak
+          github-token: ${{ github.token }}
+      - name: Verify binary
+        run: |
+          test -s backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos and SDK
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Compile approved v0.3.2 patch
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.3.2-rootless-fast
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
+      - name: Verify and publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.3.2-test
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3.2_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3.2"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.2 — UI/UX & Icon Refresh" --notes "User-approved UI v0.3.2 built on tested v0.3.1 ipatool backend: account-bound region in search box, Language under Logout, X and developer donation links for 0xkuj and Sentechtipsvn, localized login time and install uicache attempt. No updates to download backend, paid app licensing, or stored IPAs. Original MIT credits retained. Testing required on Dopamine iOS 15.8.8 before stable Sileo publication."
+          fi
