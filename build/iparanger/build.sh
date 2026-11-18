@@ -130,6 +130,12 @@ python3 build/iparanger/polish_v031.py upstream
 python3 build/iparanger/polish_v032.py upstream
 python3 build/iparanger/ui_parity_about_v033.py upstream
 python3 build/iparanger/ipa_details_v033.py upstream
+# Enforce all approved UI views before building, not only successful compilation.
+grep -q 'countryOverlay' upstream/Controllers/IPARSearchViewController.m
+grep -q 'gridActionButton' upstream/Controllers/IPARIPADetailViewController.m
+grep -q 'IPARAboutViewController' upstream/Controllers/IPARAccountAndCreditsController.m
+grep -q 'MIT License' upstream/Controllers/IPARAboutViewController.m
+grep -q 'Sentechtipsvn' upstream/Controllers/IPARDeveloperLinksViewController.m
 sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.3.3/' upstream/Extensions/IPARConstants.h
 # Build pipeline supplies patched ipatool from macOS native iOS build.
 test -s backend/ipatool-ios-arm64
