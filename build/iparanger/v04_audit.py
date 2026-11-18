@@ -13,6 +13,7 @@ root=Path(sys.argv[1])
 ''',"utf-8")
 (root/"Utils/IPARIPAAudit.m").write_text(r'''#import "IPARIPAAudit.h"
 #import "../Extensions/IPARConstants.h"
+#import "IPARUtils.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <mach-o/loader.h>
 #import <mach-o/fat.h>
