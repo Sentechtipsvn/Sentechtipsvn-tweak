@@ -33,15 +33,18 @@ new=r'''- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIn
     __weak typeof(self) weakSelf = self;
     __weak typeof(detail) weakDetail = detail;
     detail.onInstall = ^{
+        [weakSelf.navigationController popViewControllerAnimated:NO];
         [weakSelf installApplication:fileName appName:displayName];
     };
     detail.onOpenInFilza = ^{
         [weakSelf openInFilza:[kIPARangerDocumentsPath stringByAppendingString:fileName]];
     };
     detail.onShare = ^{
+        [weakSelf.navigationController popViewControllerAnimated:NO];
         [weakSelf shareFile:fileName];
     };
     detail.onRename = ^{
+        [weakSelf.navigationController popViewControllerAnimated:NO];
         [weakSelf renameFileAtPath:fileName];
     };
     detail.onDelete = ^{
