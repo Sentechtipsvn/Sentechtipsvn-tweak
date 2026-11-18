@@ -1,0 +1,63 @@
+name: Build IPARanger VN v0.3.3 from stable release backend
+on:
+  push:
+    branches:
+      - dev/iparanger-v033-ui-parity-about-20261118
+    paths:
+      - ".github/workflows/package-iparanger-v033-from-deb.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse exact ipatool backend from prior verified v0.3.2 DEB
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p backend previous
+          gh release download iparanger-vn-2.8.2-vn0.3.2-test -R Sentechtipsvn/Sentechtipsvn-tweak -p '*.deb' -D previous
+          PACKAGE=$(find previous -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -s "$PACKAGE"
+          dpkg-deb -x "$PACKAGE" previous/extracted
+          BINARY=$(find previous/extracted -type f -name ipatool -print -quit)
+          test -s "$BINARY"
+          cp "$BINARY" backend/ipatool-ios-arm64
+          chmod +x backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Build native detail view and About UI
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - name: Verify DEB and upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.3.3-test
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.3.3_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.3.3"
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.3.3 — UI & Giới thiệu" --notes "Test: Apple ID Store badge within search field, native IPA details (install, Filza, share, rename, delete), compact account credits, About, terms, MIT copyright. Builds on tested v0.3.2 download engine; account storefront and downloaded IPA storage unchanged. Needs iOS 15 Dopamine real-device validation before public Sileo."
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.3.3-test-deb
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
