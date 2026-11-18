@@ -141,8 +141,8 @@ static NSString *const kIPARLanguagePreference = @"Sentechtips.IPARanger.Languag
 + (NSString *)languageCode {
     NSString *stored = [[NSUserDefaults standardUserDefaults] stringForKey:kIPARLanguagePreference];
     if ([stored isEqualToString:@"en"] || [stored isEqualToString:@"vi"]) return stored;
-    NSString *locale = NSLocale.preferredLanguages.firstObject ?: @"vi";
-    return [[locale lowercaseString] hasPrefix:@"vi"] ? @"vi" : @"en";
+    // Preserve Vietnamese as the default on upgrade from earlier IPARanger VN.
+    return @"vi";
 }
 + (void)setLanguageCode:(NSString *)code {
     if (![code isEqualToString:@"vi"] && ![code isEqualToString:@"en"]) return;
