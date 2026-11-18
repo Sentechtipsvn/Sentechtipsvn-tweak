@@ -173,7 +173,7 @@ s=once(s,'''    if (self.existingApps.count > 0) {
         self.noDataLabel.text=@" ";
         return visible.count;
     }''',"table rows")
-s=once(s,'self.noDataLabel.text = @"Nothing to show here.\\nStart by clicking the download icon!";',
+s=once(s,'self.noDataLabel.text = IPARL(@"Nothing to show here.\\nStart by clicking the download icon!");',
 '''self.noDataLabel.text=self.existingApps.count ? IPARL(@"No matches in IPA library"):
                             IPARL(@"No downloaded IPAs yet");''',"table empty state")
 # Replace cell display only. The filename expression is used elsewhere
