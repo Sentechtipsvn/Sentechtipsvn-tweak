@@ -81,6 +81,9 @@ new=r'''- (void)installCountrySearchAccessory {
     if (field && self.countryOverlay.superview != field) {
         [self installCountrySearchAccessory];
     }
+    if (field && self.countryOverlay.superview == field) {
+        [field bringSubviewToFront:self.countryOverlay];
+    }
 }
 '''
 s=s[:start]+new+s[end:]
