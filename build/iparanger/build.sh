@@ -120,14 +120,15 @@ p.write_text(src,encoding="utf-8")
 ctrl=Path("upstream/layout/DEBIAN/control")
 control=ctrl.read_text(encoding="utf-8")
 assert "Version: 2.8.2" in control
-ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.3.1").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
+ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.3.2").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
 print("PATCH OK: UI thread, JSON validation, search concurrency, safe shell term")
 PY
 python3 build/iparanger/localize.py upstream
 python3 build/iparanger/patch_catalog_v03.py upstream
 python3 build/iparanger/add_languages.py upstream
 python3 build/iparanger/polish_v031.py upstream
-sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.3.1/' upstream/Extensions/IPARConstants.h
+python3 build/iparanger/polish_v032.py upstream
+sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.3.2/' upstream/Extensions/IPARConstants.h
 # Build pipeline supplies patched ipatool from macOS native iOS build.
 test -s backend/ipatool-ios-arm64
 cp backend/ipatool-ios-arm64 upstream/Resources/ipatool/ipatool
@@ -145,5 +146,5 @@ test -n "$(find packages -type f -name '*iphoneos-arm64.deb' -print -quit)"
 for deb in packages/*iphoneos-arm64.deb; do
   dpkg-deb --info "$deb" | head -30
   test "$(stat -c %s "$deb")" -gt 100000
-  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.3.1"
+  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.3.2"
 done
