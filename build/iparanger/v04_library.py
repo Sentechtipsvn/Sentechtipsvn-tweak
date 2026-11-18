@@ -176,10 +176,15 @@ s=once(s,'''    if (self.existingApps.count > 0) {
 s=once(s,'self.noDataLabel.text = @"Nothing to show here.\\nStart by clicking the download icon!";',
 '''self.noDataLabel.text=self.existingApps.count ? IPARL(@"No matches in IPA library"):
                             IPARL(@"No downloaded IPAs yet");''',"table empty state")
-# Replace four cell display uses without touching other data model operations.
+# Replace cell display only. The filename expression is used elsewhere
+# for deletion and must NOT be globally replaced.
+cellStart=s.index("- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:")
+cellEnd=s.index("#pragma mark - Table View Delegate",cellStart)
+cell=s[cellStart:cellEnd]
 for k in ["kAppnameIndex","kFilenameIndex","kSizeIndex","kAppimageIndex"]:
-    s=once(s,f"self.existingApps[indexPath.row][{k}]",f"[self displayedIPAItems][indexPath.row][{k}]",
-           "library cell "+k)
+    cell=once(cell,f"self.existingApps[indexPath.row][{k}]",f"[self displayedIPAItems][indexPath.row][{k}]",
+              "library cell "+k)
+s=s[:cellStart]+cell+s[cellEnd:]
 s=once(s,'if (indexPath.row < self.existingApps.count) {',
        'if (indexPath.row < [self displayedIPAItems].count) {',"library cell bound")
 # Detail source should use filtered list; deleting maps to original unfiltered list.
