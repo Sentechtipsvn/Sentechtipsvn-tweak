@@ -2,7 +2,7 @@ name: Package IPARanger VN v0.3.3 (verified backend)
 on:
   push:
     branches:
-      - dev/iparanger-v033-ui-install-20261118
+      - dev/iparanger-v033-ui-parity-about-20261118
     paths:
       - ".github/workflows/package-iparanger-v033.yml"
   workflow_dispatch:
