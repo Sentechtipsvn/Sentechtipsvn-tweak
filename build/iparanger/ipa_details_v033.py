@@ -134,7 +134,7 @@ p.write_text(s,"utf-8")
 }
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView { return 3; }
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return section == 0 ? 1 : section == 1 ? 4 : 5;
+    return section == 0 ? 1 : section == 1 ? 4 : 2;
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     if (section==1) return IPARL(@"File information");
@@ -165,28 +165,90 @@ p.write_text(s,"utf-8")
         cell.selectionStyle=UITableViewCellSelectionStyleNone;
         return cell;
     }
-    NSString *actions[]={IPARL(@"Install Application"),IPARL(@"Open in Filza"),
-                         IPARL(@"Share"),IPARL(@"Rename File"),IPARL(@"Delete")};
-    NSString *icons[]={@"square.and.arrow.down",@"folder",@"square.and.arrow.up",
-                       @"pencil",@"trash"};
-    cell.textLabel.text=actions[index.row];
-    cell.imageView.image=[UIImage systemImageNamed:icons[index.row]];
-    cell.imageView.tintColor=(index.row==4)?UIColor.systemRedColor:UIColor.systemBlueColor;
-    if (index.row==4) cell.textLabel.textColor=UIColor.systemRedColor;
+    if (index.row==0) {
+        UIStackView *column = [[UIStackView alloc] init];
+        column.axis=UILayoutConstraintAxisVertical;
+        column.distribution=UIStackViewDistributionFillEqually;
+        column.spacing=10;
+        column.translatesAutoresizingMaskIntoConstraints=NO;
+        [cell.contentView addSubview:column];
+        for (NSInteger r=0;r<2;++r) {
+            UIStackView *line=[[UIStackView alloc] init];
+            line.axis=UILayoutConstraintAxisHorizontal;
+            line.distribution=UIStackViewDistributionFillEqually;
+            line.spacing=10;
+            for (NSInteger c=0;c<2;++c) {
+                NSInteger action=r*2+c;
+                [line addArrangedSubview:[self gridActionButton:action]];
+            }
+            [column addArrangedSubview:line];
+        }
+        [NSLayoutConstraint activateConstraints:@[
+          [column.topAnchor constraintEqualToAnchor:cell.contentView.topAnchor constant:12],
+          [column.bottomAnchor constraintEqualToAnchor:cell.contentView.bottomAnchor constant:-12],
+          [column.leadingAnchor constraintEqualToAnchor:cell.contentView.leadingAnchor constant:12],
+          [column.trailingAnchor constraintEqualToAnchor:cell.contentView.trailingAnchor constant:-12]
+        ]];
+        cell.selectionStyle=UITableViewCellSelectionStyleNone;
+        return cell;
+    }
+    cell.imageView.image=[UIImage systemImageNamed:@"trash"];
+    cell.imageView.tintColor=UIColor.systemRedColor;
+    cell.textLabel.text=IPARL(@"Delete");
+    cell.textLabel.textColor=UIColor.systemRedColor;
     cell.accessoryType=UITableViewCellAccessoryDisclosureIndicator;
     return cell;
 }
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)index {
-    [tableView deselectRowAtIndexPath:index animated:YES];
-    if (index.section!=2) return;
-    switch(index.row) {
-        case 0:if(self.onInstall)self.onInstall();break;
-        case 1:if(self.onOpenInFilza)self.onOpenInFilza();break;
-        case 2:if(self.onShare)self.onShare();break;
-        case 3:if(self.onRename)self.onRename();break;
-        case 4:if(self.onDelete)self.onDelete();break;
+- (UIButton *)gridActionButton:(NSInteger)action {
+    NSArray<NSString *> *titles=@[IPARL(@"Install Application"),IPARL(@"Open in Filza"),
+                                  IPARL(@"Share"),IPARL(@"Rename File")];
+    NSArray<NSString *> *icons=@[@"square.and.arrow.down",@"folder",@"square.and.arrow.up",@"pencil"];
+    UIButton *button=[UIButton buttonWithType:UIButtonTypeSystem];
+    button.tag=action;
+    button.backgroundColor=UIColor.tertiarySystemGroupedBackgroundColor;
+    button.layer.cornerRadius=12;
+    button.layer.cornerCurve=kCACornerCurveContinuous;
+    button.accessibilityLabel=titles[action];
+    UIImageView *glyph=[[UIImageView alloc] initWithImage:[UIImage systemImageNamed:icons[action]]];
+    glyph.tintColor=UIColor.systemBlueColor;
+    glyph.contentMode=UIViewContentModeScaleAspectFit;
+    glyph.translatesAutoresizingMaskIntoConstraints=NO;
+    [button addSubview:glyph];
+    UILabel *title=[[UILabel alloc] init];
+    title.text=titles[action];
+    title.textColor=UIColor.labelColor;
+    title.textAlignment=NSTextAlignmentCenter;
+    title.adjustsFontSizeToFitWidth=YES;
+    title.minimumScaleFactor=0.80;
+    title.font=[UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
+    title.translatesAutoresizingMaskIntoConstraints=NO;
+    [button addSubview:title];
+    [NSLayoutConstraint activateConstraints:@[
+        [button.heightAnchor constraintEqualToConstant:86],
+        [glyph.centerXAnchor constraintEqualToAnchor:button.centerXAnchor],
+        [glyph.topAnchor constraintEqualToAnchor:button.topAnchor constant:12],
+        [glyph.widthAnchor constraintEqualToConstant:25],
+        [glyph.heightAnchor constraintEqualToConstant:25],
+        [title.leadingAnchor constraintEqualToAnchor:button.leadingAnchor constant:6],
+        [title.trailingAnchor constraintEqualToAnchor:button.trailingAnchor constant:-6],
+        [title.topAnchor constraintEqualToAnchor:glyph.bottomAnchor constant:8],
+        [title.bottomAnchor constraintLessThanOrEqualToAnchor:button.bottomAnchor constant:-8]
+    ]];
+    [button addTarget:self action:@selector(handleGridAction:) forControlEvents:UIControlEventTouchUpInside];
+    return button;
+}
+- (void)handleGridAction:(UIButton *)button {
+    switch(button.tag) {
+        case 0: if(self.onInstall)self.onInstall();break;
+        case 1: if(self.onOpenInFilza)self.onOpenInFilza();break;
+        case 2: if(self.onShare)self.onShare();break;
+        case 3: if(self.onRename)self.onRename();break;
         default:break;
     }
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)index {
+    [tableView deselectRowAtIndexPath:index animated:YES];
+    if (index.section==2 && index.row==1 && self.onDelete) self.onDelete();
 }
 @end
 ''',"utf-8")
