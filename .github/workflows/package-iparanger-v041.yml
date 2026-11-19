@@ -1,0 +1,85 @@
+name: IPARanger VN v0.4.1 — About and Identity (test)
+on:
+  push:
+    branches:
+      - dev/iparanger-v041-about-identity-20261119
+    paths:
+      - ".github/workflows/package-iparanger-v041.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse proven v0.4.0 ipatool backend unchanged
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p backend previous
+          gh release download iparanger-vn-2.8.2-vn0.4.0-test -R Sentechtipsvn/Sentechtipsvn-tweak -p '*.deb' -D previous
+          PACKAGE=$(find previous -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -s "$PACKAGE"
+          dpkg-deb -x "$PACKAGE" previous/extracted
+          BINARY=$(find previous/extracted -type f -name ipatool -print -quit)
+          test -s "$BINARY"
+          cp "$BINARY" backend/ipatool-ios-arm64
+          chmod +x backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Compile native About and migration build
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - name: Verify new package identity, metadata and preserved file paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.4.1-test
+          DEB="upstream/packages/com.sentechtipsvn.iparanger_2.8.2+vn0.4.1_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.sentechtipsvn.iparanger"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.4.1"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          dpkg-deb -f "$DEB" Conflicts | grep -Fq 'com.0xkuj.iparanger'
+          dpkg-deb -f "$DEB" Replaces | grep -Fq 'com.0xkuj.iparanger'
+          mkdir -p verify
+          dpkg-deb -x "$DEB" verify
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib
+          infos=list(Path("verify").rglob("IPARanger.app/Info.plist"))
+          assert len(infos)==1, f"Expected 1 bundled Info.plist, got {infos}"
+          d=plistlib.loads(infos[0].read_bytes())
+          assert d["CFBundleIdentifier"]=="com.sentechtipsvn.iparanger", d["CFBundleIdentifier"]
+          assert d["IPARVNPackageVersion"]=="2.8.2+vn0.4.1"
+          for lang in ("en","vi"):
+              assert list(Path("verify").rglob(f"{lang}.lproj/Localizable.strings"))
+          source=Path("upstream/Extensions/IPARConstants.h").read_text()
+          assert '@"/var/jb/Library/IPARanger/"' in source
+          assert '--keychain-passphrase IPARanger' in source
+          about=Path("upstream/Controllers/IPARAboutViewController.m").read_text()
+          assert "IPARAboutTextViewController" in about and "IPAROriginalMITLicense()" in about
+          print("Verified package identity, bundled metadata, localization and original IPA storage path.")
+          PY
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.4.1 — Giới thiệu & chuyển định danh (Test)" --notes-file docs/IPARanger-v041-migration.md
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.4.1-rootless-test
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
