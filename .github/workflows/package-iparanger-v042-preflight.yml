@@ -1,4 +1,4 @@
-name: IPARanger VN v0.4.2 — IPA preflight (source fix)
+name: IPARanger VN v0.4.2 — IPA preflight (metadata fix)
 on:
   push:
     branches:
