@@ -1,4 +1,4 @@
-name: IPARanger VN v0.4.2 — IPA preflight (test)
+name: IPARanger VN v0.4.2 — IPA preflight (source fix)
 on:
   push:
     branches:
