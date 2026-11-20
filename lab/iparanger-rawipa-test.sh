@@ -18,6 +18,9 @@ if [ -z "$INPUT" ] || [ ! -f "$INPUT" ]; then
 fi
 case "$INPUT" in *.ipa|*.IPA) ;; *) echo "RAW-001: Tệp phải có phần mở rộng .ipa" >&2; exit 1;; esac
 mkdir -p "$LOGDIR" || exit 1
+# Allow the mobile user to browse the result in Files/Filza after a root terminal run.
+chown mobile:mobile "$OUTDIR" "$LOGDIR" 2>/dev/null || true
+chmod 755 "$OUTDIR" "$LOGDIR" 2>/dev/null || true
 log "IPARanger VN Raw IPA Lab / $STAMP"
 log "INPUT_NAME=$(basename "$INPUT")"
 log "STAGE: PRECHECK"
@@ -48,7 +51,16 @@ log "STAGE: DECRYPT"
 ENGINELOG="$LOGDIR/$STAMP.engine.log"
 if ! "$ENGINE" package -i "$INPUT" -o "$OUTPUT" -v > "$ENGINELOG" 2>&1; then
     log "ENGINE_LOG=$ENGINELOG"
-    abort RAW-010 "Engine thất bại; xem engine log, kiểm tra RAW-009 nếu lỗi cấp phép."
+    if grep -Eqi 'SC_Info|sinf|license metadata|missingRootSinf' "$ENGINELOG"; then
+        abort RAW-003 "Thiếu hoặc sai metadata cấp phép FairPlay (không ghi nội dung SC_Info)."
+    elif grep -Eqi 'libjailbreak|jbclient|proc_csflags_set|permission setup' "$ENGINELOG"; then
+        abort RAW-006 "Không khởi tạo được quyền jailbreak; xem nhật ký."
+    elif grep -Eqi 'permission denied|mkdir staging|chown failed|staged app' "$ENGINELOG"; then
+        abort RAW-008 "Không tạo được môi trường staging an toàn."
+    elif grep -Eqi 'mremap_encrypted|fairplay|authorization|EPERM' "$ENGINELOG"; then
+        abort RAW-009 "Không được hệ thống xác thực giải mã FairPlay cho IPA này."
+    fi
+    abort RAW-010 "Helper thất bại; chưa đủ dữ liệu xác định lỗi, xem engine log."
 fi
 log "STAGE: VERIFY_ARCHIVE"
 [ -s "$OUTPUT" ] || abort RAW-011 "Không tìm thấy IPA đầu ra."
