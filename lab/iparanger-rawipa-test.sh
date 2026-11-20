@@ -75,7 +75,7 @@ if ! "$ENGINE" package -i "$INPUT" -o "$STAGED" -v > "$ENGINELOG" 2>&1; then
         abort RAW-003 "Thiếu hoặc sai metadata cấp phép FairPlay."
     elif grep -Eqi 'libjailbreak|jbclient|proc_csflags_set|permission setup' "$ENGINELOG"; then
         abort RAW-006 "Quyền jailbreak chưa được khởi tạo đúng."
-    elif grep -Eqi 'permission denied|mkdir staging|chown failed|staged app' "$ENGINELOG"; then
+    elif grep -Eqi 'permission denied|mkdir staging|chown failed|mkdir staging directory failed' "$ENGINELOG"; then
         abort RAW-008 "Không tạo hoặc truy cập được vùng staging."
     elif grep -Eqi 'mremap_encrypted|fairplay|authorization|EPERM' "$ENGINELOG"; then
         abort RAW-009 "Hệ thống từ chối xử lý vùng FairPlay."
