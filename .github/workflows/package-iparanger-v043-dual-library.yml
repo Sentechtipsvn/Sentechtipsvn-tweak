@@ -1,4 +1,4 @@
-name: IPARanger VN v0.4.3 — Dual IPA libraries and 4 actions
+name: IPARanger VN v0.4.3 — Dual libraries diagnostic build
 on:
   push:
     branches:
