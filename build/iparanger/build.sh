@@ -150,6 +150,8 @@ grep -q 'IPARIPAAudit' upstream/Controllers/IPARIPADetailViewController.m
 grep -q 'copyBundleIdentifier' upstream/Controllers/IPARIPADetailViewController.m
 grep -q 'displayedIPAItems' upstream/Controllers/IPARDownloadViewController.m
 grep -q 'initForExportingURLs' upstream/Controllers/IPARIPADetailViewController.m
+grep -q -- '- (void)copyBundleIdentifier:' upstream/Controllers/IPARIPADetailViewController.m
+grep -q -- '- (void)saveToFiles' upstream/Controllers/IPARIPADetailViewController.m
 grep -q 'IPARDiagnostics' upstream/Controllers/IPARDownloadViewController.m
 grep -q 'IPARAboutTextViewController' upstream/Controllers/IPARAboutViewController.m
 grep -q 'IPARVNPackageVersion' upstream/Resources/Info.plist
