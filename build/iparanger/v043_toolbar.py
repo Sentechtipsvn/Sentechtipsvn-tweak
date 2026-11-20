@@ -211,4 +211,14 @@ for lang in ("en","vi"):
         if key+" =" not in s:
             s+=f"{key} = {json.dumps(vi if lang=='vi' else en,ensure_ascii=False)};\n"
     p.write_text(s,"utf-8")
-print("v0.4.3: CC single-row 4 action toolbar, distinct original and verified IPA actions")
+# App metadata must agree with test DEB; ID remains the v0.4.x baseline.
+import plistlib
+info=root/"Resources"/"Info.plist"
+meta=plistlib.loads(info.read_bytes())
+assert meta.get("CFBundleIdentifier")=="com.0xkuj.iparanger"
+assert meta.get("IPARVNPackageVersion")=="2.8.2+vn0.4.2"
+meta["IPARVNPackageVersion"]="2.8.2+vn0.4.3"
+meta["CFBundleShortVersionString"]="0.4.3"
+meta["CFBundleVersion"]="430"
+info.write_bytes(plistlib.dumps(meta,fmt=plistlib.FMT_XML,sort_keys=False))
+print("v0.4.3: CC 4-action toolbar; distinct original/unencrypted paths; version synchronized")
