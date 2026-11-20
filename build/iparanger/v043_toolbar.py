@@ -65,6 +65,11 @@ s=s[:x]+r'''    if (index.row==0) {
 # Rebuild tail. Contains old gridActionButton and handleGridAction, keep safe preflight.
 x=s.index('''- (UIButton *)gridActionButton:(NSInteger)action {''')
 y=s.index('''- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:''',x)
+# Preserve copy Bundle ID, its animation, and Files export from the stable v0.4.x.
+savedStart=s.index("- (void)saveToFiles {",x)
+savedEnd=s.index("- (void)handleGridAction:",savedStart)
+retained=s[savedStart:savedEnd]
+assert "initForExportingURLs" in retained and "copyBundleIdentifier" in retained
 s=s[:x]+r'''- (UIButton *)gridActionButton:(NSInteger)action {
     NSArray<NSString *> *original=@[IPARL(@"Install Application"),IPARL(@"Inspect IPA"),
                                     IPARL(@"Open in Filza"),IPARL(@"More IPA actions")];
@@ -189,7 +194,7 @@ s=s[:x]+r'''- (UIButton *)gridActionButton:(NSInteger)action {
         if (self.onOpenInFilza) self.onOpenInFilza();
     } else [self showMoreIPAActions:button];
 }
-'''+s[y:]
+'''+retained+s[y:]
 p.write_text(s,"utf-8")
 trs={
 "Inspect IPA":"Kiểm tra",
