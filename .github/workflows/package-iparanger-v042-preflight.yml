@@ -1,0 +1,95 @@
+name: IPARanger VN v0.4.2 — IPA preflight (test)
+on:
+  push:
+    branches:
+      - dev/iparanger-v042-ipa-preflight-20261120
+    paths:
+      - ".github/workflows/package-iparanger-v042-preflight.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse proven v0.4.1.1 ipatool backend unchanged
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p backend previous
+          gh release download iparanger-vn-2.8.2-vn0.4.1.1-safe-test -R Sentechtipsvn/Sentechtipsvn-tweak -p '*.deb' -D previous
+          PACKAGE=$(find previous -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -s "$PACKAGE"
+          dpkg-deb -x "$PACKAGE" previous/extracted
+          BINARY=$(find previous/extracted -type f -name ipatool -print -quit)
+          test -s "$BINARY"
+          cp "$BINARY" backend/ipatool-ios-arm64
+          chmod +x backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Compile IPA preflight and existing native UI
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - name: Verify IPA preflight, safe identity and unchanged IPA storage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.4.2-test
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.4.2_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.4.2"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          ! dpkg-deb -f "$DEB" Conflicts | grep -q .
+          ! dpkg-deb -f "$DEB" Replaces | grep -q .
+          ! dpkg-deb -f "$DEB" Breaks | grep -q .
+          mkdir -p verify
+          dpkg-deb -x "$DEB" verify
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib
+          infos=list(Path("verify").rglob("IPARanger.app/Info.plist"))
+          assert len(infos)==1, f"Expected 1 bundled Info.plist, got {infos}"
+          d=plistlib.loads(infos[0].read_bytes())
+          assert d["CFBundleIdentifier"]=="com.0xkuj.iparanger", d["CFBundleIdentifier"]
+          assert d["IPARVNPackageVersion"]=="2.8.2+vn0.4.2"
+          for lang in ("en","vi"):
+              assert list(Path("verify").rglob(f"{lang}.lproj/Localizable.strings"))
+          source=Path("upstream/Extensions/IPARConstants.h").read_text()
+          assert '@"/var/jb/Library/IPARanger/"' in source
+          assert '--keychain-passphrase IPARanger' in source
+          about=Path("upstream/Controllers/IPARAboutViewController.m").read_text()
+          assert "IPARAboutTextViewController" in about and "IPAROriginalMITLicense()" in about
+          audit=Path("upstream/Utils/IPARIPAAudit.m").read_text()
+          assert "nestedPayload" in audit and '"structure"' in audit
+          detail=Path("upstream/Controllers/IPARIPADetailViewController.m").read_text()
+          assert "IPA package layout error" in detail and "Payload is inside an extra folder" in detail
+          assert "com.sentechtipsvn.iparanger" not in Path("upstream/layout/DEBIAN/control").read_text()
+          assert "Conflicts:" not in Path("upstream/layout/DEBIAN/control").read_text()
+          assert "Replaces:" not in Path("upstream/layout/DEBIAN/control").read_text()
+          postinst=Path("upstream/layout/DEBIAN/postinst").read_text()
+          assert "sbreload" not in postinst.lower() and "uicache" not in postinst.lower()
+          print("SAFE: original package and Bundle ID, unchanged app + IPA paths, no conflicting package transition.")
+          PY
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.4.2 — IPA Preflight (test)" --notes "Test-only IPA layout check: separately verify ZIP integrity vs Payload root layout, identify wrongly nested Payload in repacked IPAs, warn before installing malformed packages, preserve all v0.4.1.1 features. Original Package ID and Bundle ID com.0xkuj.iparanger; backend and /var/jb/Library/IPARanger unchanged. No FairPlay decryption. On-device validation required before publishing to Sileo."
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.4.2-preflight-rootless-test
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
