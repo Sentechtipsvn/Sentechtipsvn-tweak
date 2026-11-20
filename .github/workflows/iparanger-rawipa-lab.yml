@@ -1,4 +1,4 @@
-name: IPARanger VN - Raw IPA helper feasibility (EXPERIMENTAL)
+name: IPARanger VN - Raw IPA helper package (EXPERIMENTAL)
 on:
   push:
     branches:
@@ -49,12 +49,12 @@ jobs:
       - name: Build separate rootless lab DEB (no app injection / no root daemon)
         run: |
           set -euo pipefail
-          test -s engine-assets/engine/unfair
-          test -s engine-assets/engine/LICENSE
+          test -s engine-assets/unfair
+          test -s engine-assets/LICENSE
           mkdir -p pkg/DEBIAN pkg/var/jb/usr/bin pkg/var/jb/usr/libexec/iparanger-rawipa pkg/var/jb/usr/share/doc/iparanger-rawipa-lab
-          cp engine-assets/engine/unfair pkg/var/jb/usr/libexec/iparanger-rawipa/unfair
+          cp engine-assets/unfair pkg/var/jb/usr/libexec/iparanger-rawipa/unfair
           cp lab/iparanger-rawipa-test.sh pkg/var/jb/usr/bin/iparanger-rawipa-test
-          cp engine-assets/engine/LICENSE pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/LICENSE
+          cp engine-assets/LICENSE pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/LICENSE
           cp docs/IPARanger-VN-v044-raw-IPA-decrypt-lab.md pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/README.md
           chmod 755 pkg/var/jb/usr/libexec/iparanger-rawipa/unfair pkg/var/jb/usr/bin/iparanger-rawipa-test
           cat > pkg/DEBIAN/control <<'EOF'
