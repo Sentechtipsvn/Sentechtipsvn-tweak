@@ -1,4 +1,4 @@
-name: IPARanger VN v0.4.3 — Dual libraries diagnostic build
+name: IPARanger VN v0.4.3 — Dual libraries regression build
 on:
   push:
     branches:
