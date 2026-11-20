@@ -1,0 +1,102 @@
+name: IPARanger VN v0.4.3 — Dual IPA libraries and 4 actions
+on:
+  push:
+    branches:
+      - dev/iparanger-v043-dual-library-20261120
+    paths:
+      - ".github/workflows/package-iparanger-v043-dual-library.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse confirmed v0.4.2 ipatool backend unchanged
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p backend previous
+          gh release download iparanger-vn-2.8.2-vn0.4.2-test -R Sentechtipsvn/Sentechtipsvn-tweak -p '*.deb' -D previous
+          PACKAGE=$(find previous -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -s "$PACKAGE"
+          dpkg-deb -x "$PACKAGE" previous/extracted
+          BINARY=$(find previous/extracted -type f -name ipatool -print -quit)
+          test -s "$BINARY"
+          cp "$BINARY" backend/ipatool-ios-arm64
+          chmod +x backend/ipatool-ios-arm64
+          file backend/ipatool-ios-arm64
+          sha256sum backend/ipatool-ios-arm64
+      - name: Install Theos
+        env:
+          CI: "true"
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+      - name: Compile dual IPA libraries and four-action toolbar
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          bash build/iparanger/build.sh
+      - name: Verify both IPA libraries and retained package identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=iparanger-vn-2.8.2-vn0.4.3-test
+          DEB="upstream/packages/com.0xkuj.iparanger_2.8.2+vn0.4.3_iphoneos-arm64.deb"
+          test -s "$DEB"
+          test "$(dpkg-deb -f "$DEB" Package)" = "com.0xkuj.iparanger"
+          test "$(dpkg-deb -f "$DEB" Version)" = "2.8.2+vn0.4.3"
+          test "$(dpkg-deb -f "$DEB" Architecture)" = "iphoneos-arm64"
+          ! dpkg-deb -f "$DEB" Conflicts | grep -q .
+          ! dpkg-deb -f "$DEB" Replaces | grep -q .
+          ! dpkg-deb -f "$DEB" Breaks | grep -q .
+          mkdir -p verify
+          dpkg-deb -x "$DEB" verify
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib
+          infos=list(Path("verify").rglob("IPARanger.app/Info.plist"))
+          assert len(infos)==1, f"Expected 1 bundled Info.plist, got {infos}"
+          d=plistlib.loads(infos[0].read_bytes())
+          assert d["CFBundleIdentifier"]=="com.0xkuj.iparanger", d["CFBundleIdentifier"]
+          assert d["IPARVNPackageVersion"]=="2.8.2+vn0.4.3"
+          for lang in ("en","vi"):
+              assert list(Path("verify").rglob(f"{lang}.lproj/Localizable.strings"))
+          source=Path("upstream/Extensions/IPARConstants.h").read_text()
+          assert '@"/var/jb/Library/IPARanger/"' in source
+          assert '--keychain-passphrase IPARanger' in source
+          about=Path("upstream/Controllers/IPARAboutViewController.m").read_text()
+          assert "IPARAboutTextViewController" in about and "IPAROriginalMITLicense()" in about
+          audit=Path("upstream/Utils/IPARIPAAudit.m").read_text()
+          assert "nestedPayload" in audit and '"structure"' in audit
+          detail=Path("upstream/Controllers/IPARIPADetailViewController.m").read_text()
+          assert "IPA package layout error" in detail and "Payload is inside an extra folder" in detail
+          library=Path("upstream/Controllers/IPARVerifiedLibraryViewController.m").read_text()
+          assert 'stringByAppendingPathComponent:@"Decrypted"' in library
+          assert 'No Mach-O encryption found' in Path("upstream/Resources/vi.lproj/Localizable.strings").read_text()
+          assert 'manual-import' in library and 'TrollStore' in library
+          assert 'UIDocumentPickerViewController' in library
+          assert "NSArray<NSString *> *original=" in detail
+          assert "self.isDecryptedSource" in detail
+          assert "com.sentechtipsvn.iparanger" not in Path("upstream/layout/DEBIAN/control").read_text()
+          assert "Conflicts:" not in Path("upstream/layout/DEBIAN/control").read_text()
+          assert "Replaces:" not in Path("upstream/layout/DEBIAN/control").read_text()
+          postinst=Path("upstream/layout/DEBIAN/postinst").read_text()
+          assert "sbreload" not in postinst.lower() and "uicache" not in postinst.lower()
+          print("SAFE: original package and Bundle ID, unchanged app + IPA paths, no conflicting package transition.")
+          PY
+          sha256sum "$DEB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DEB" --clobber
+          else
+            gh release create "$TAG" "$DEB" --target "$GITHUB_SHA" --prerelease --title "IPARanger VN v0.4.3 — Dual IPA Libraries (test)" --notes "Dual IPA library UI and CC-style four action toolbars. Apple ID downloads remain in original folder. The second IPA library imports only user-selected IPA files that pass ZIP, Payload and non-encrypted Mach-O checks, with separate Decrypted directory and explicit manual-import metadata. TrollStore handoff uses iOS Open In; no installation guarantee, no automatic FairPlay decryption. App and Debian ID remain com.0xkuj.iparanger. Build test only; requires iPhone 7 Plus validation before Sileo."
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-VN-v0.4.3-dual-library-rootless-test
+          path: upstream/packages/*iphoneos-arm64.deb
+          if-no-files-found: error
