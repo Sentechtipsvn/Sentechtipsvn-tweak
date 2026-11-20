@@ -1,0 +1,78 @@
+name: IPARanger VN - Raw IPA helper feasibility (EXPERIMENTAL)
+on:
+  push:
+    branches:
+      - dev/iparanger-v044-rawipa-lab-20261120
+    paths:
+      - ".github/workflows/iparanger-rawipa-lab.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile-ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned MIT-licensed unfair engine
+        run: |
+          git clone https://github.com/lbr77/unfair.git engine
+          git -C engine checkout --detach a754437649b1428e07918c0315a678ed7fc57dec
+          test -f engine/LICENSE
+          grep -q "Copyright (c) 2026 Lakr233" engine/LICENSE
+      - name: Cross-compile arm64 iOS helper
+        run: |
+          brew list ldid >/dev/null 2>&1 || brew install ldid
+          cd engine
+          bash build-iOS.sh
+          test -s unfair
+          lipo -info unfair
+          file unfair
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unfair-rawipa-ios-arm64-unsigned-runtime-unverified
+          path: |
+            engine/unfair
+            engine/LICENSE
+            engine/global.xml
+          if-no-files-found: error
+  package-lab:
+    needs: compile-ios
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: unfair-rawipa-ios-arm64-unsigned-runtime-unverified
+          path: engine-assets
+      - name: Build separate rootless lab DEB (no app injection / no root daemon)
+        run: |
+          set -euo pipefail
+          test -s engine-assets/engine/unfair
+          test -s engine-assets/engine/LICENSE
+          mkdir -p pkg/DEBIAN pkg/var/jb/usr/bin pkg/var/jb/usr/libexec/iparanger-rawipa pkg/var/jb/usr/share/doc/iparanger-rawipa-lab
+          cp engine-assets/engine/unfair pkg/var/jb/usr/libexec/iparanger-rawipa/unfair
+          cp lab/iparanger-rawipa-test.sh pkg/var/jb/usr/bin/iparanger-rawipa-test
+          cp engine-assets/engine/LICENSE pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/LICENSE
+          cp docs/IPARanger-VN-v044-raw-IPA-decrypt-lab.md pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/README.md
+          chmod 755 pkg/var/jb/usr/libexec/iparanger-rawipa/unfair pkg/var/jb/usr/bin/iparanger-rawipa-test
+          cat > pkg/DEBIAN/control <<'EOF'
+          Package: com.sentechtipsvn.iparanger.rawipa-lab
+          Version: 0.1.0~exp1
+          Architecture: iphoneos-arm64
+          Priority: optional
+          Section: Utilities
+          Maintainer: Sentechtipsvn
+          Description: Rootless stand-alone IPA decryption feasibility lab. Does not modify IPARanger/SpringBoard. Manual root terminal execution only. Experimental.
+          EOF
+          dpkg-deb --build pkg com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
+          dpkg-deb -I com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
+          test "$(dpkg-deb -f com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb Package)" = "com.sentechtipsvn.iparanger.rawipa-lab"
+          test "$(dpkg-deb -f com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb Architecture)" = "iphoneos-arm64"
+          sha256sum com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPARanger-RawIPA-Lab-Helper-EXP-iphoneos-arm64
+          path: "*.deb"
+          if-no-files-found: error
