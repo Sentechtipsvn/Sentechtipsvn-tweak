@@ -120,7 +120,7 @@ p.write_text(src,encoding="utf-8")
 ctrl=Path("upstream/layout/DEBIAN/control")
 control=ctrl.read_text(encoding="utf-8")
 assert "Version: 2.8.2" in control
-ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.4.2").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
+ctrl.write_text(control.replace("Version: 2.8.2", "Version: 2.8.2+vn0.4.3").replace("Name: IPA Ranger", "Name: IPA Ranger VN"), encoding="utf-8")
 print("PATCH OK: UI thread, JSON validation, search concurrency, safe shell term")
 PY
 python3 build/iparanger/localize.py upstream
@@ -136,6 +136,8 @@ python3 build/iparanger/v04_library.py upstream
 python3 build/iparanger/v041_about.py upstream
 python3 build/iparanger/v041_safe_recovery.py upstream
 python3 build/iparanger/v042_preflight.py upstream
+python3 build/iparanger/v043_libraries.py upstream
+python3 build/iparanger/v043_toolbar.py upstream
 
 # Enforce all approved UI views before building, not only successful compilation.
 grep -q 'countryOverlay' upstream/Controllers/IPARSearchViewController.m
@@ -153,10 +155,17 @@ grep -q 'IPARVNPackageVersion' upstream/Resources/Info.plist
 grep -q 'IPA Payload layout' upstream/Controllers/IPARIPADetailViewController.m
 grep -q 'nestedPayload' upstream/Utils/IPARIPAAudit.m
 grep -q 'IPA package layout error' upstream/Controllers/IPARIPADetailViewController.m
+grep -q 'IPARVerifiedLibraryViewController' upstream/Controllers/IPARDownloadViewController.m
+grep -q 'IPA từ Apple ID' upstream/Resources/vi.lproj/Localizable.strings
+grep -q 'IPA đã giải mã' upstream/Resources/vi.lproj/Localizable.strings
+grep -q 'self.isDecryptedSource' upstream/Controllers/IPARIPADetailViewController.m
+grep -q 'Manually imported, checked as unencrypted' upstream/Controllers/IPARVerifiedLibraryViewController.m
+grep -q 'com.0xkuj.iparanger' upstream/layout/DEBIAN/control
+! grep -Eq '^(Conflicts|Replaces|Breaks):' upstream/layout/DEBIAN/control
 grep -q 'Package: com.0xkuj.iparanger' upstream/layout/DEBIAN/control
 ! grep -Eq '^(Conflicts|Replaces|Breaks):' upstream/layout/DEBIAN/control
 grep -q '<string>com.0xkuj.iparanger</string>' upstream/Resources/Info.plist
-sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.4.2/' upstream/Extensions/IPARConstants.h
+sed -i 's/IPA Ranger VN: 2.8.2+vn0.2/IPA Ranger VN: 2.8.2+vn0.4.3/' upstream/Extensions/IPARConstants.h
 # Build pipeline supplies patched ipatool from macOS native iOS build.
 test -s backend/ipatool-ios-arm64
 cp backend/ipatool-ios-arm64 upstream/Resources/ipatool/ipatool
@@ -174,5 +183,5 @@ test -n "$(find packages -type f -name '*iphoneos-arm64.deb' -print -quit)"
 for deb in packages/*iphoneos-arm64.deb; do
   dpkg-deb --info "$deb" | head -30
   test "$(stat -c %s "$deb")" -gt 100000
-  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.4.2"
+  test "$(dpkg-deb -f "$deb" Version)" = "2.8.2+vn0.4.3"
 done
