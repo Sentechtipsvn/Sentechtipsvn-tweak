@@ -1,4 +1,4 @@
-name: IPARanger VN - Raw IPA helper package (EXPERIMENTAL)
+name: IPARanger VN - Hardened Raw IPA helper (EXPERIMENTAL)
 on:
   push:
     branches:
@@ -49,6 +49,7 @@ jobs:
       - name: Build separate rootless lab DEB (no app injection / no root daemon)
         run: |
           set -euo pipefail
+          bash -n lab/iparanger-rawipa-test.sh
           test -s engine-assets/unfair
           test -s engine-assets/LICENSE
           mkdir -p pkg/DEBIAN pkg/var/jb/usr/bin pkg/var/jb/usr/libexec/iparanger-rawipa pkg/var/jb/usr/share/doc/iparanger-rawipa-lab
@@ -67,8 +68,9 @@ jobs:
           Maintainer: Sentechtipsvn
           Description: Rootless stand-alone IPA decryption feasibility lab. Does not modify IPARanger/SpringBoard. Manual root terminal execution only. Experimental.
           EOF
-          dpkg-deb --build pkg com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
+          dpkg-deb --root-owner-group --build pkg com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
           dpkg-deb -I com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
+          dpkg-deb --contents com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb | grep -q 'root/root'
           test "$(dpkg-deb -f com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb Package)" = "com.sentechtipsvn.iparanger.rawipa-lab"
           test "$(dpkg-deb -f com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb Architecture)" = "iphoneos-arm64"
           sha256sum com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
