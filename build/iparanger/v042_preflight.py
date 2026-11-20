@@ -125,7 +125,7 @@ b='''- (void)handleGridAction:(UIButton *)button {
                 ([state isEqualToString:@"missing"]?
                   IPARL(@"Missing top-level Payload folder"):
                   IPARL(@"Info.plist cannot be read"));
-            NSString *detailText=[NSString stringWithFormat:@"%@\\n\\n%@",
+            NSString *detailText=[NSString stringWithFormat:@"%@\n\n%@",
                             reason,IPARL(@"IPA repack instructions")];
             UIAlertController *warning=[UIAlertController
                 alertControllerWithTitle:IPARL(@"IPA package layout error")
