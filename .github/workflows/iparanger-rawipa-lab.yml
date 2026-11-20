@@ -1,4 +1,4 @@
-name: IPARanger VN - Hardened Raw IPA helper (EXPERIMENTAL)
+name: IPARanger VN - Rootless Raw IPA helper packaging (EXPERIMENTAL)
 on:
   push:
     branches:
@@ -70,7 +70,8 @@ jobs:
           EOF
           dpkg-deb --root-owner-group --build pkg com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
           dpkg-deb -I com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
-          dpkg-deb --contents com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb | grep -q 'root/root'
+          dpkg-deb --contents com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb > package_contents.txt
+          grep -q 'root/root' package_contents.txt
           test "$(dpkg-deb -f com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb Package)" = "com.sentechtipsvn.iparanger.rawipa-lab"
           test "$(dpkg-deb -f com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb Architecture)" = "iphoneos-arm64"
           sha256sum com.sentechtipsvn.iparanger.rawipa-lab_0.1.0~exp1_iphoneos-arm64.deb
