@@ -162,4 +162,14 @@ for lang in ("en","vi"):
             val="Repackage the archive so Payload/YourApp.app is directly at the ZIP root. Changing the extension alone will not fix its structure. A valid IPA layout does not guarantee a valid code signature."
         data+=f"{key} = {json.dumps(val,ensure_ascii=False)};\n"
     p.write_text(data,"utf-8")
-print("v0.4.2: IPA package layout preflight and localized repack guidance installed")
+# Ensure the app's own About metadata matches the new DEB release number.
+import plistlib
+info=root/"Resources"/"Info.plist"
+meta=plistlib.loads(info.read_bytes())
+assert meta.get("CFBundleIdentifier")=="com.0xkuj.iparanger"
+assert meta.get("IPARVNPackageVersion")=="2.8.2+vn0.4.1.1"
+meta["IPARVNPackageVersion"]="2.8.2+vn0.4.2"
+meta["CFBundleShortVersionString"]="0.4.2"
+meta["CFBundleVersion"]="420"
+info.write_bytes(plistlib.dumps(meta,fmt=plistlib.FMT_XML,sort_keys=False))
+print("v0.4.2: IPA layout preflight installed, old app identity retained, metadata updated")
