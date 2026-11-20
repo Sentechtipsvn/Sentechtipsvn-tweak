@@ -55,6 +55,7 @@ jobs:
           cp engine-assets/unfair pkg/var/jb/usr/libexec/iparanger-rawipa/unfair
           cp lab/iparanger-rawipa-test.sh pkg/var/jb/usr/bin/iparanger-rawipa-test
           cp engine-assets/LICENSE pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/LICENSE
+          cp engine-assets/global.xml pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/global.xml
           cp docs/IPARanger-VN-v044-raw-IPA-decrypt-lab.md pkg/var/jb/usr/share/doc/iparanger-rawipa-lab/README.md
           chmod 755 pkg/var/jb/usr/libexec/iparanger-rawipa/unfair pkg/var/jb/usr/bin/iparanger-rawipa-test
           cat > pkg/DEBIAN/control <<'EOF'
