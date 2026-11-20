@@ -1,4 +1,4 @@
-name: IPARanger VN - Rootless Raw IPA helper packaging (EXPERIMENTAL)
+name: IPARanger VN - Raw IPA runtime smoke test (EXPERIMENTAL)
 on:
   push:
     branches:
@@ -50,6 +50,18 @@ jobs:
         run: |
           set -euo pipefail
           bash -n lab/iparanger-rawipa-test.sh
+          # Exercise a real shell invocation to detect incorrectly escaped parameter expansions.
+          if grep -Fq '\${' lab/iparanger-rawipa-test.sh; then echo "BUG: escaped shell parameter expansion"; exit 1; fi
+          TESTDIR=$(mktemp -d)
+          touch "$TESTDIR/source.ipa"
+          set +e
+          /bin/sh lab/iparanger-rawipa-test.sh "$TESTDIR/source.ipa" "$TESTDIR/out" > "$TESTDIR/console.log" 2>&1
+          CODE=$?
+          set -e
+          test "$CODE" -ne 0
+          grep -q 'RAW-005' "$TESTDIR/console.log"
+          test -s "$(find "$TESTDIR/out/logs" -name '*.log' -print -quit)"
+          rm -rf "$TESTDIR"
           test -s engine-assets/unfair
           test -s engine-assets/LICENSE
           mkdir -p pkg/DEBIAN pkg/var/jb/usr/bin pkg/var/jb/usr/libexec/iparanger-rawipa pkg/var/jb/usr/share/doc/iparanger-rawipa-lab
