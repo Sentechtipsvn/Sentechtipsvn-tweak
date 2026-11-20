@@ -1,4 +1,4 @@
-name: IPARanger VN v0.4.3 — Dual libraries regression build
+name: IPARanger VN v0.4.3 — Modern iOS picker test
 on:
   push:
     branches:
