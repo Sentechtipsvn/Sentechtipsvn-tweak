@@ -139,6 +139,7 @@ python3 build/iparanger/v042_preflight.py upstream
 python3 build/iparanger/v043_libraries.py upstream
 python3 build/iparanger/v043_toolbar.py upstream
 
+set -x
 # Enforce all approved UI views before building, not only successful compilation.
 grep -q 'countryOverlay' upstream/Controllers/IPARSearchViewController.m
 grep -q 'gridActionButton' upstream/Controllers/IPARIPADetailViewController.m
