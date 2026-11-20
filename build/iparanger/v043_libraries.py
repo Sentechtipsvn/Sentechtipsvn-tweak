@@ -51,6 +51,7 @@ p.write_text(s,"utf-8")
 @end
 ''',"utf-8")
 (root/"Controllers/IPARVerifiedLibraryViewController.m").write_text(r'''#import "IPARVerifiedLibraryViewController.h"
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import "IPARIPADetailViewController.h"
 #import "../Utils/IPARIPAAudit.h"
 #import "../Utils/IPARLanguageManager.h"
@@ -217,7 +218,7 @@ p.write_text(s,"utf-8")
 }
 - (void)importIPA {
     UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc]
-        initWithDocumentTypes:@[@"public.data"] inMode:UIDocumentPickerModeImport];
+        initForOpeningContentTypes:@[UTTypeData] asCopy:YES];
     picker.delegate=self;
     picker.allowsMultipleSelection=NO;
     [self presentViewController:picker animated:YES completion:nil];
@@ -449,4 +450,11 @@ for lang in ("en","vi"):
         key=json.dumps(en,ensure_ascii=False)
         if key+" =" not in s:s+=f"{key} = {json.dumps(vi if lang=='vi' else en,ensure_ascii=False)};\n"
     file.write_text(s,"utf-8")
+# Link UniformTypeIdentifiers used by the non-deprecated iOS 14+ picker.
+makefile=root/"Makefile"
+make=makefile.read_text("utf-8")
+assert make.count("IPARanger_FRAMEWORKS = UIKit CoreGraphics")==1
+make=make.replace("IPARanger_FRAMEWORKS = UIKit CoreGraphics",
+                  "IPARanger_FRAMEWORKS = UIKit CoreGraphics UniformTypeIdentifiers",1)
+makefile.write_text(make,"utf-8")
 print("v0.4.3: separate Apple ID and manually imported clear-IPA folders; import/audit/install/Files/TrollStore handoff")
