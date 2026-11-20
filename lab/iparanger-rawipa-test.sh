@@ -4,8 +4,8 @@
 set -u
 umask 077
 ENGINE="/var/jb/usr/libexec/iparanger-rawipa/unfair"
-INPUT="\${1:-}"
-OUTDIR="\${2:-/var/mobile/Documents/IPARanger-RawIPA-Lab}"
+INPUT="${1:-}"
+OUTDIR="${2:-/var/mobile/Documents/IPARanger-RawIPA-Lab}"
 STAMP="$(date -u '+%Y%m%dT%H%M%SZ')-$$"
 if [ -z "$INPUT" ] || [ ! -f "$INPUT" ]; then
     echo "RAW-001: Hãy cung cấp đường dẫn IPA nguồn." >&2
@@ -66,7 +66,7 @@ if [ -n "$FILE_KB" ] && [ -n "$FREE_KB" ] && [ "$FREE_KB" -lt "$((FILE_KB * 4))"
 fi
 BASE="$(basename "$INPUT" | sed -E 's/[.][iI][pP][aA]$//' | tr -cd 'A-Za-z0-9._-' | cut -c1-80)"
 [ -n "$BASE" ] || BASE=application
-FINAL="$OUTDIR/\${BASE}_decrypted_\${STAMP}.ipa"
+FINAL="$OUTDIR/${BASE}_decrypted_${STAMP}.ipa"
 [ ! -e "$FINAL" ] || abort RAW-014 "Tệp đầu ra đã tồn tại."
 report "STAGE: DECRYPT"
 if ! "$ENGINE" package -i "$INPUT" -o "$STAGED" -v > "$ENGINELOG" 2>&1; then
