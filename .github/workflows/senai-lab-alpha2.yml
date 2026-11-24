@@ -1,0 +1,62 @@
+name: SenAI Lab Alpha 2 - rootless DEB
+on:
+  push:
+    branches: [senai-lab-alpha2-build]
+    paths:
+      - 'SenAI-Lab-1.0-alpha.2-Source.zip'
+      - '.github/workflows/senai-lab-alpha2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    if: ${{ github.ref == 'refs/heads/senai-lab-alpha2-build' }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source and extract
+        run: |
+          set -eu
+          zip=SenAI-Lab-1.0-alpha.2-Source.zip
+          test -f "$zip" || { echo "::error::Upload the original SenAI Lab Alpha 2 source ZIP to the root of this branch."; exit 1; }
+          echo "6e1662dbc6107dc7201057f079cc8ed2462c12eb88e17287d52b35039c81aa7a  $zip" | shasum -a 256 -c -
+          unzip -q "$zip" -d "$RUNNER_TEMP/senai-source"
+      - name: Install build tools
+        run: brew install ldid dpkg make xz
+      - name: Install Theos
+        run: git clone --recursive https://github.com/theos/theos.git "$RUNNER_TEMP/theos"
+      - name: Compile and package
+        env:
+          THEOS: ${{ runner.temp }}/theos
+        run: |
+          set -eu
+          cd "$RUNNER_TEMP/senai-source/SenAI-Lab"
+          chmod +x layout/DEBIAN/postinst layout/DEBIAN/prerm
+          xcrun --sdk iphoneos --show-sdk-path
+          gmake package FINALPACKAGE=1
+          mkdir -p "$GITHUB_WORKSPACE/senai-output"
+          for deb in packages/*.deb; do
+            test -f "$deb"
+            test "$(dpkg-deb -f "$deb" Architecture)" = iphoneos-arm64
+            dest=$(mktemp -d)
+            dpkg-deb -I "$deb"
+            dpkg-deb -c "$deb"
+            dpkg-deb -x "$deb" "$dest"
+            app="$dest/var/jb/Applications/SenAILab.app"
+            test -x "$app/SenAILab"
+            test -f "$app/Info.plist"
+            test -f "$app/screen-test.png"
+            test -f "$app/speech-vi.wav"
+            file "$app/SenAILab"
+            xcrun vtool -show-build "$app/SenAILab"
+            ldid -e "$app/SenAILab" > /dev/null
+            cp "$deb" "$GITHUB_WORKSPACE/senai-output/"
+          done
+          cd "$GITHUB_WORKSPACE/senai-output"
+          shasum -a 256 *.deb > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SenAI-Lab-1.0-alpha.2-rootless
+          path: senai-output/*
+          if-no-files-found: error
